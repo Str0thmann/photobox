@@ -32,6 +32,13 @@
         The LedControl expands the the Countdown
 
 
+    Hardware:
+        Raspberry Pi 3+
+        LCD Screen
+        Nikon XXX
+        Adafruit LED RGB Ring
+
+    TODO Preview Picture subprocess FIX
 
     TODO add the subprocess for the Camera
 
@@ -51,6 +58,9 @@ pictureLocation = ""
 captureButton = None
 saveButton = None
 abortButton = None
+
+# in seconds
+screenSaverStartTime = 30
 
 pictureLocationLock = Lock()
 capturedEvent = Event()
@@ -85,7 +95,7 @@ class Camera(Thread):
             self.startPreviewEvent.wait()
 
             # preview
-            self.start_preview_process()
+            self.start_video_preview_process()
 
             # TODO wait for subProcess Camera Stream closed
             self.tmp1Event.wait()
@@ -94,7 +104,7 @@ class Camera(Thread):
                 self.capture()
 
                 # Das Event brauchen wir vllt nicht wenn wir die wait Funktion des Subprocess nutzen
-                self.finishCaptureEvent.wait()
+                #self.finishCaptureEvent.wait()
 
 
     def start_preview(self):
@@ -103,7 +113,7 @@ class Camera(Thread):
     def stop_preview(self):
         self.startPreviewEvent.clear()
 
-        self.stop_preview_process()
+        self.stop_video_preview_process()
 
         # TODO Only for TEST
         self.tmp1Event.set()
@@ -115,21 +125,25 @@ class Camera(Thread):
     def is_set(self):
         return self.startPreviewEvent.is_set()
 
-    def start_picture_preview(self):
-        self.picturePreviewSubProcess = subprocess.Popen('vlc', shell=True, stdin=subprocess.PIPE)
+    def start_picture_preview_process(self):
+        previewPictureCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 '
 
-    def stop_picture_preview(self):
-        self.picturePreviewSubProcess.close()
+        self.picturePreviewSubProcess = subprocess.Popen(previewPictureCommand, shell=True, stdout=False, stdin=subprocess.PIPE)
+
+
+
+    def stop_picture_preview_process(self):
+        self.picturePreviewSubProcess.kill()
 
     # local function
-    def start_preview_process(self):
+    def start_video_preview_process(self):
 
         # TODO Subprocess Preview Stream
         print("Start Camera preview, need implementation")
 
 
     # local function
-    def stop_preview_process(self):
+    def stop_video_preview_process(self):
 
         # TODO Stop Subprocess Preview Stream
         print("Stop Camera preview, need implementation")
@@ -142,7 +156,7 @@ class Camera(Thread):
         self.captured = True
 
         # TODO start preview Subprocess
-        self.start_picture_preview()
+        self.start_picture_preview_process()
 
         capturedEvent.set()
 
@@ -152,8 +166,6 @@ class ScreenSaver(Thread):
     startScreenSaverEvent = Event()
     diashowDelay = Event()
 
-    # in seconds
-    screenSaverStartTime = 30
 
 
     def __init__(self):
@@ -168,9 +180,9 @@ class ScreenSaver(Thread):
 
         while True:
             # TODO testen ob Probleme fuer negativ Werte aufftreten
-            self.startScreenSaverEvent.wait(self.screenSaverStartTime - (time.time() - self.lastInteraction))
+            self.startScreenSaverEvent.wait(screenSaverStartTime - (time.time() - self.lastInteraction))
 
-            if(time.time() - self.lastInteraction  > self.screenSaverStartTime):
+            if(time.time() - self.lastInteraction  > screenSaverStartTime):
                 self.start_screen_saver()
 
             if(self.startScreenSaverEvent.is_set()):
@@ -277,20 +289,29 @@ def getButton():
 
     return inputCommand
 
+# TODO add function
+def saveImage():
+    print("Image Saved")
+
+
+# TODO add function
+def deleteImage():
+    print("Image delete")
+
 
 if __name__ == '__main__':
 
     cameraThread = Camera()
     cameraThread.start()
 
-    countDownThread = Countdown()
-    countDownThread.start()
+    countdownThread = Countdown()
+    countdownThread.start()
 
     screenSaverThread = ScreenSaver()
     screenSaverThread.start()
 
     threads.update({cameraThread.getName(): cameraThread})
-    threads.update({countDownThread.getName(): countDownThread})
+    threads.update({countdownThread.getName(): countdownThread})
     threads.update({screenSaverThread.getName(): screenSaverThread})
 
 
@@ -303,10 +324,10 @@ if __name__ == '__main__':
 
 
         if(captured):
-            cameraThread.stop_picture_preview()
+            cameraThread.stop_picture_preview_process()
 
 
-        # ScreenSave Thread stop
+        # ScreenSaver Thread stop
         if(screenSaverThread.is_set()):
             # TODO Stop screenSaver
             screenSaverThread.stop_screen_saver()
@@ -317,14 +338,18 @@ if __name__ == '__main__':
         elif(button == "c"):
             if(captured):
                 # TODO Close the previewPictureProcess
+                cameraThread.stop_picture_preview_process()
+
+                cameraThread.start_video_preview_process()
 
                 # TODO Save Image
+                saveImage()
 
                 captured = False
 
             else:
                 # Start countdown
-                countDownThread.start_countdown()
+                countdownThread.start_countdown()
                 capturedEvent.wait()
                 capturedEvent.clear()
 
@@ -332,17 +357,29 @@ if __name__ == '__main__':
         elif(button == "r"):
             if(captured):
                 # TODO Close the previewPictureProcess
+                cameraThread.stop_picture_preview_process()
+
+                cameraThread.start_video_preview_process()
 
                 # TODO Save Image
+                saveImage()
+
                 # TODO Start countdown
+                # Start countdown
+                countdownThread.start_countdown()
+                capturedEvent.wait()
+                capturedEvent.clear()
 
                 captured = False
 
         elif(button == "a"):
             if(captured):
                 # TODO Close the previewPictureProcess
+                cameraThread.stop_picture_preview_process()
 
-                # TODO Delete Image
+                cameraThread.start_video_preview_process()
+
+                deleteImage()
                 captured = False
 
         else:
