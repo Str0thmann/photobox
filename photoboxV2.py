@@ -3,7 +3,39 @@
 
     @author Lars Stratmann
     @Version 2.0
-    @modified: 2019.08.05
+    @modified: 13.06.2019
+
+    What does the Program:
+        This Software capture a Image with a camera over the USB port.
+        After pressing the "start" button the Countdown starts and a preview Video stream starts.
+        On the screen are the Countdown numbers transparent png images.
+        If the Countdown is at 2 the preview Stream close an d the camera start focusing and capture the image.
+        The captured Image will show on the Screen.
+        If "abort" is pressed the Image will not be saved.
+        If "recapture" is pressed the Image will be saved and the Countdown starts again.
+        If "start" is pressed the Image will be saved and the preview video stream starts.
+
+        After X time the screensaver starts and the preview Image or the preview video stream stops.
+
+        Optional:
+            The countdown can expand with an LED ring
+
+    Functions:
+        The Program is in 4 Threads splited, camera Control, ScreenSaver, LedControl and Countdown
+
+        The Camera Thread start and stop the preview Viedo stream and start the Capturing.
+
+        The ScreenSaver start after X Time inactive, and call a stop function in the Camera Thread
+
+        The Countdown print transparent PNGs on the top Screen layer and call a start capturing function in the Camera Thread.
+
+        The LedControl expands the the Countdown
+
+
+
+    TODO add the subprocess for the Camera
+
+    TODO LedControl
 '''
 
 from threading import Thread, Event, Lock
@@ -15,6 +47,11 @@ threads = {}
 captured = False
 pictureLocation = ""
 
+
+captureButton = None
+saveButton = None
+abortButton = None
+
 pictureLocationLock = Lock()
 capturedEvent = Event()
 
@@ -24,8 +61,6 @@ picturePreviewSubProcess = None
 class Camera(Thread):
     global threads
     global capturedEvent
-
-
 
     startPreviewEvent = Event()
 
@@ -241,8 +276,6 @@ def getButton():
             inputCommand = "nothing"
 
     return inputCommand
-
-
 
 
 if __name__ == '__main__':
