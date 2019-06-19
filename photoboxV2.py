@@ -49,10 +49,15 @@ from threading import Thread, Event, Lock
 import threading
 import time
 import subprocess
+import os
+import signal
 
 threads = {}
 captured = False
-pictureLocation = ""
+pictureDirectory = ""
+
+# The Time how long a picture will be show
+diashowTime = 5
 
 
 captureButton = None
@@ -64,6 +69,8 @@ screenSaverStartTime = 30
 
 pictureLocationLock = Lock()
 capturedEvent = Event()
+
+
 
 # TODO Subprocess preview
 picturePreviewSubProcess = None
@@ -126,14 +133,21 @@ class Camera(Thread):
         return self.startPreviewEvent.is_set()
 
     def start_picture_preview_process(self):
-        previewPictureCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 '
+       # self.picturePreviewSubProcess = subprocess.Popen('vlc', shell=True, stdin=subprocess.PIPE)
 
-        self.picturePreviewSubProcess = subprocess.Popen(previewPictureCommand, shell=True, stdout=False, stdin=subprocess.PIPE)
+        # The os.setsid() is passed in the argument preexec_fn so
+        # it's run after the fork() and before  exec() to run the shell.
+        self.picturePreviewSubProcess = subprocess.Popen("vlc", stdout=subprocess.PIPE, shell=True, preexec_fn=os.setsid)
 
+        #previewPictureCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 '
 
-
+        #self.picturePreviewSubProcess = subprocess.Popen(previewPictureCommand, shell=True, stdout=False,
+                                                         stdin=subprocess.PIPE)
     def stop_picture_preview_process(self):
-        self.picturePreviewSubProcess.kill()
+        #self.picturePreviewSubProcess.close()
+
+        # Send the signal to all the process groups
+        os.killpg(os.getpgid(self.picturePreviewSubProcess.pid), signal.SIGTERM)
 
     # local function
     def start_video_preview_process(self):
@@ -164,7 +178,7 @@ class Camera(Thread):
 class ScreenSaver(Thread):
     global threads
     startScreenSaverEvent = Event()
-    diashowDelay = Event()
+    diashowDelayEvent = Event()
 
 
 
@@ -190,13 +204,13 @@ class ScreenSaver(Thread):
 
     def start_screen_saver(self):
         self.startScreenSaverEvent.set()
-        self.diashowDelay.clear()
+        self.diashowDelayEvent.clear()
 
         threads['Camera'].stop_preview()
 
     def stop_screen_saver(self):
         self.startScreenSaverEvent.clear()
-        self.diashowDelay.set()
+        self.diashowDelayEvent.set()
 
     def is_set(self):
         return self.startScreenSaverEvent.is_set()
@@ -206,24 +220,64 @@ class ScreenSaver(Thread):
 
     def diashow(self):
 
-        while not self.diashowDelay.is_set():
+        while not self.diashowDelayEvent.is_set():
             # TODO show Picutres
             print("Diashow")
-            self.diashowDelay.wait(5)
+            self.diashowDelayEvent.wait(5)
 
     def stock_photos(self):
         pass
 
 
-class LedControl(Thread):
+class LedRingControl(Thread):
     global threads
+
+    ledCountdownEvent = Event()
+
+    # TODO add LED variables
+    ledPins = 12
 
     def __init__(self):
         Thread.__init__(self)
-        Thread.setName(self, "LedControl")
+        Thread.setName(self, "LedRingControl")
 
 
     def run(self):
+        while True:
+            self.ledCountdownEvent.wait()
+
+            self.led_ring_function()
+
+
+    # local
+    def increase_led_ring(self):
+        pass
+
+    # local
+    def reset_led_ring(self):
+        pass
+
+    def led_ring_function(self, countdown):
+
+        while(countdown > 0):
+            self.increase_led_ring()
+
+            countdown -= 1
+            Event().wait(1)
+
+        # TODO wait for: capture finished
+
+
+    def start_led_countdown_event(self):
+        self.ledCountdownEvent.set()
+
+    def stop_led_countdown_event(self):
+        self.ledCountdownEvent.clear()
+
+    def set_led_on(self, ledNumber):
+        pass
+
+    def set_led_off(self, ledNumber):
         pass
 
 
