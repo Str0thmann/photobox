@@ -43,6 +43,8 @@
     TODO add the subprocess for the Camera
 
     TODO LedControl
+
+    TODO pngview check implement
 '''
 
 from threading import Thread, Event, Lock
@@ -51,10 +53,17 @@ import time
 import subprocess
 import os
 import signal
+import glob
+import random
+
+# boolean for Develop Modus
+devModus = True
 
 threads = {}
 captured = False
-pictureDirectory = ""
+imageDirectory = "/home/lars/Bilder/"
+imageFileType = "jpg"
+
 
 # The Time how long a picture will be show
 diashowTime = 5
@@ -65,7 +74,7 @@ saveButton = None
 abortButton = None
 
 # in seconds
-screenSaverStartTime = 300
+screenSaverStartTime = 30
 
 pictureLocationLock = Lock()
 capturedEvent = Event()
@@ -95,6 +104,13 @@ class Camera(Thread):
         Thread.setName(self, "Camera")
 
         self.startCapturing = False
+
+        subprocess.Popen('mkfifo fifo.mjpg', shell=True, stdout=False, stdin=subprocess.PIPE).wait()
+
+        # Kill all gphoto2 processes
+        subprocess.Popen('killall /usr/lib/gvfs/gvfs-gphoto2-volume-monitor', shell=True, stdout=False, stdin=False).wait()
+        subprocess.Popen('killall /usr/lib/gvfs/gvfsd-gphoto2', shell=True, stdout=False, stdin=False).wait()
+
 
     def run(self):
         while True:
@@ -139,15 +155,17 @@ class Camera(Thread):
 
     def start_picture_preview_process(self):
 
+        if(devModus):
+            picturePreviewCommand = "eog '" + imageDirectory + "tmp.jpg'"
+        else:
+            picturePreviewCommand = "gphoto2 --capture-movie --stdout > fifo.mjpg & omxplayer --layer 2 -b --live fifo.mjpg"
+
         # The os.setsid() is passed in the argument preexec_fn so
         # it's run after the fork() and before  exec() to run the shell.
-        self.picturePreviewSubProcess = subprocess.Popen("vlc '/home/lars/Bilder/tmp.jpg'", shell=True, preexec_fn=os.setsid)
+        self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
 
         print("Start Picture preview")
 
-
-        #previewPictureCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 '
-        #self.picturePreviewSubProcess = subprocess.Popen(previewPictureCommand, shell=True, stdout=False, stdin=subprocess.PIPE)
 
     def stop_picture_preview_process(self):
 
@@ -160,8 +178,16 @@ class Camera(Thread):
     def start_video_preview_process(self):
 
         # TODO Subprocess Preview Stream
-        self.videoPreviewSubProcess = subprocess.Popen("vlc '/home/lars/Bilder/pre.jpg'", shell=True, preexec_fn=os.setsid)
 
+        if(devModus):
+            videoPreviewCommand = "eog '" + imageDirectory + "pre.jpg'"
+
+        else:
+            videoPreviewCommand = "gphoto2"
+
+        # The os.setsid() is passed in the argument preexec_fn so
+        # it's run after the fork() and before  exec() to run the shell.
+        self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid)
 
         print("Start Camera preview, need implementation")
 
@@ -174,7 +200,7 @@ class Camera(Thread):
         # TODO Stop Subprocess Preview Stream
         os.killpg(os.getpgid(self.videoPreviewSubProcess.pid), signal.SIGTERM)
 
-        print("Stop Camera preview, need implementation")
+        print("Stop Camera video preview")
 
 
     # local function
@@ -208,6 +234,8 @@ class ScreenSaver(Thread):
         self.startScreenSaverEvent.set()
         self.lastInteraction = time.time()
 
+        self.globalPictures = glob.glob('*.' + imageFileType)
+
 
     def run(self):
 
@@ -239,10 +267,28 @@ class ScreenSaver(Thread):
 
     def diashow(self):
 
+
+        self.globalPictures = glob.glob(imageDirectory + '*.' + imageFileType)
+
         while not self.diashowDelayEvent.is_set():
             # TODO show Picutres
             print("Diashow")
-            self.diashowDelayEvent.wait(5)
+
+            tmpDisplayImage = str(self.globalPictures[random.randint(0, len(self.globalPictures) - 1)])
+
+            if(devModus):
+
+                pro = subprocess.Popen("eog '" + tmpDisplayImage + "'", shell=True, preexec_fn=os.setsid)
+
+
+                self.diashowDelayEvent.wait(5)
+
+                os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
+
+            else:
+                imageViewCommand = '../raspidmx/pngview/pngview -b 0 -l 3 -t 5000 ' + imageDirectory + tmpDisplayImage
+
+                subprocess.Popen(imageViewCommand, shell=True).wait()
 
     def stock_photos(self):
         pass
@@ -332,11 +378,14 @@ class Countdown(Thread):
                     threads["Camera"].start_capturing()
                     #threads["Camera"].stop_preview()
 
-                #counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 ' + counterPath + str(i) + '.png'
+                if(devModus):
+                    print("Picture: " + str(i))
+                    Event().wait(1)
+                else:
+                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 ' + imageDirectory + str(i) + '.png'
 
-                #subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE).wait()
-                print("Picture: " + str(i))
-                Event().wait(1)
+                    subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE).wait()
+
             except:
                 print("Error programm pngview or counter file not found")
 
@@ -418,8 +467,6 @@ if __name__ == '__main__':
 
                 captured = False
 
-                #cameraThread.start_video_preview_process()
-
             else:
                 # Start countdown
                 countdownThread.start_countdown()
@@ -437,8 +484,6 @@ if __name__ == '__main__':
 
                 captured = False
 
-                #cameraThread.start_video_preview_process()
-
                 Event().wait(1)
 
                 # TODO Start countdown
@@ -452,8 +497,6 @@ if __name__ == '__main__':
             if(captured):
                 # TODO Close the previewPictureProcess
                 cameraThread.stop_picture_preview_process()
-
-                #cameraThread.start_video_preview_process()
 
                 deleteImage()
                 captured = False
