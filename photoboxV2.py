@@ -68,6 +68,7 @@ imageFileType = "jpg"
 lastCapturedImage = "tmp.jpg"
 
 noImageCapturedInfo = "Files/keinFotofuerDich2.jpg"
+noImageFound = "Files/noImageFound.jpg"
 
 
 saveOnServer = False
@@ -291,7 +292,11 @@ class ScreenSaver(Thread):
             # TODO show Picutres
             print("Diashow")
 
-            tmpDisplayImage = str(self.globalPictures[random.randint(0, len(self.globalPictures) - 1)])
+            if(len(self.globalPictures) == 0):
+                tmpDisplayImage = noImageFound
+
+            else:
+                tmpDisplayImage = str(self.globalPictures[random.randint(0, len(self.globalPictures) - 1)])
 
             if(devModus):
 
