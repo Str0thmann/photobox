@@ -65,7 +65,7 @@ threads = {}
 captured = False
 imageDirectory = "/home/lars/Bilder/"
 imageFileType = "jpg"
-lastCapturedName = "tmp.jpg"
+lastCapturedImage = "tmp.jpg"
 
 noImageCapturedInfo = "Files/keinFotofuerDich2.jpg"
 
@@ -158,7 +158,7 @@ class Camera(Thread):
 
     def start_picture_preview_process(self):
 
-        picturePreviewCommand = "feh -xFY " + lastCapturedName
+        picturePreviewCommand = "feh -xFY " + lastCapturedImage
 
         # The os.setsid() is passed in the argument preexec_fn so
         # it's run after the fork() and before  exec() to run the shell.
@@ -206,28 +206,29 @@ class Camera(Thread):
     # local function
     def capture(self):
         global captured
-        global lastCapturedName
+        global lastCapturedImage
 
         # TODO Subprocess Camera Capturing
         date = time.strftime("%Y-%m-%d-%H-%M-%S")
         # fileName = date + str(hashedName) + imageFileType
-        lastCapturedName = date + imageFileType
+        lastCapturedImage = date + imageFileType
 
-        captureCommmand = "gphoto2 --keep --capture-image-and-download --stdout > " + lastCapturedName
+        captureCommmand = "gphoto2 --keep --capture-image-and-download --stdout > " + lastCapturedImage
 
         subprocess.Popen(captureCommmand, shell=True, stdout=False, stdin=False).wait()
         captured = True
 
         try:
-            lastCapturedName = imageDirectory + lastCapturedName
+            lastCapturedImage = imageDirectory + lastCapturedImage
 
-            checkImg = Image.open(lastCapturedName)
+            checkImg = Image.open(lastCapturedImage)
             print("Image captured")
 
         except:
             print("Image cant captured")
+            os.remove(lastCapturedImage)
 
-            lastCapturedName = noImageCapturedInfo
+            lastCapturedImage = noImageCapturedInfo
 
 
         # TODO start preview Subprocess
@@ -427,34 +428,34 @@ def getButton():
 
 # TODO add function
 def saveImage():
-    global lastCapturedName
-    if(lastCapturedName != noImageCapturedInfo):
+    global lastCapturedImage
+    if(lastCapturedImage != noImageCapturedInfo):
 
         try:
             if(saveOnServer):
-                os.rename(imageDirectory + lastCapturedName, serverImageDirectory + lastCapturedName)
+                os.rename(imageDirectory + lastCapturedImage, serverImageDirectory + lastCapturedImage)
 
             print("Image saved")
         except:
             print("Error: Image cant be moved")
 
-    lastCapturedName = ""
+    lastCapturedImage = ""
 
 # TODO add function
 def deleteImage():
-    global lastCapturedName
+    global lastCapturedImage
 
-    if(lastCapturedName != noImageCapturedInfo):
+    if(lastCapturedImage != noImageCapturedInfo):
 
         try:
-            os.remove(imageDirectory + lastCapturedName)
+            os.remove(imageDirectory + lastCapturedImage)
             print("Image delete")
         except:
             print("Error: Image cant be delete")
 
         Event().wait(1)
 
-    lastCapturedName = ""
+    lastCapturedImage = ""
 
 if __name__ == '__main__':
 
