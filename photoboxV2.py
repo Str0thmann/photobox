@@ -42,19 +42,21 @@
 
     TODO add the subprocess for the Camera
 
+    TODO Captured Image Check
+
     TODO LedControl
 
     TODO pngview check implement
 '''
 
 from threading import Thread, Event, Lock
-import threading
 import time
 import subprocess
 import os
 import signal
 import glob
 import random
+from PIL import Image
 
 # boolean for Develop Modus
 devModus = True
@@ -63,6 +65,13 @@ threads = {}
 captured = False
 imageDirectory = "/home/lars/Bilder/"
 imageFileType = "jpg"
+lastCapturedName = "tmp.jpg"
+
+noImageCapturedInfo = "Files/keinFotofuerDich2.jpg"
+
+
+saveOnServer = False
+serverImageDirectory = ""
 
 
 # The Time how long a picture will be show
@@ -91,12 +100,6 @@ class Camera(Thread):
     startPreviewEvent = Event()
 
     finishCaptureEvent = Event()
-
-
-
-
-    # TODO subProcess Var for the preview Stream
-    #previewStream = ""
 
     def __init__(self):
         Thread.__init__(self)
@@ -155,10 +158,7 @@ class Camera(Thread):
 
     def start_picture_preview_process(self):
 
-        if(devModus):
-            picturePreviewCommand = "eog '" + imageDirectory + "tmp.jpg'"
-        else:
-            picturePreviewCommand = "gphoto2 --capture-movie --stdout > fifo.mjpg & omxplayer --layer 2 -b --live fifo.mjpg"
+        picturePreviewCommand = "feh -xFY " + lastCapturedName
 
         # The os.setsid() is passed in the argument preexec_fn so
         # it's run after the fork() and before  exec() to run the shell.
@@ -180,10 +180,10 @@ class Camera(Thread):
         # TODO Subprocess Preview Stream
 
         if(devModus):
-            videoPreviewCommand = "eog '" + imageDirectory + "pre.jpg'"
+            videoPreviewCommand = "feh '" + imageDirectory + "pre.jpg'"
 
         else:
-            videoPreviewCommand = "gphoto2"
+            videoPreviewCommand = "gphoto2 --capture-movie --stdout > fifo.mjpg & omxplayer --layer 2 -b --live fifo.mjpg"
 
         # The os.setsid() is passed in the argument preexec_fn so
         # it's run after the fork() and before  exec() to run the shell.
@@ -206,13 +206,29 @@ class Camera(Thread):
     # local function
     def capture(self):
         global captured
+        global lastCapturedName
 
         # TODO Subprocess Camera Capturing
+        date = time.strftime("%Y-%m-%d-%H-%M-%S")
+        # fileName = date + str(hashedName) + imageFileType
+        lastCapturedName = date + imageFileType
 
-        Event().wait(2)
+        captureCommmand = "gphoto2 --keep --capture-image-and-download --stdout > " + lastCapturedName
 
+        subprocess.Popen(captureCommmand, shell=True, stdout=False, stdin=False).wait()
         captured = True
-        print("Image captured")
+
+        try:
+            lastCapturedName = imageDirectory + lastCapturedName
+
+            checkImg = Image.open(lastCapturedName)
+            print("Image captured")
+
+        except:
+            print("Image cant captured")
+
+            lastCapturedName = noImageCapturedInfo
+
 
         # TODO start preview Subprocess
         self.start_picture_preview_process()
@@ -278,7 +294,7 @@ class ScreenSaver(Thread):
 
             if(devModus):
 
-                pro = subprocess.Popen("eog '" + tmpDisplayImage + "'", shell=True, preexec_fn=os.setsid)
+                pro = subprocess.Popen("feh '" + tmpDisplayImage + "'", shell=True, preexec_fn=os.setsid)
 
 
                 self.diashowDelayEvent.wait(5)
@@ -411,15 +427,34 @@ def getButton():
 
 # TODO add function
 def saveImage():
-    Event().wait(1)
-    print("Image Saved")
+    global lastCapturedName
+    if(lastCapturedName != noImageCapturedInfo):
 
+        try:
+            if(saveOnServer):
+                os.rename(imageDirectory + lastCapturedName, serverImageDirectory + lastCapturedName)
+
+            print("Image saved")
+        except:
+            print("Error: Image cant be moved")
+
+    lastCapturedName = ""
 
 # TODO add function
 def deleteImage():
-    Event().wait(1)
-    print("Image delete")
+    global lastCapturedName
 
+    if(lastCapturedName != noImageCapturedInfo):
+
+        try:
+            os.remove(imageDirectory + lastCapturedName)
+            print("Image delete")
+        except:
+            print("Error: Image cant be delete")
+
+        Event().wait(1)
+
+    lastCapturedName = ""
 
 if __name__ == '__main__':
 
