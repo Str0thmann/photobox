@@ -3,7 +3,7 @@
 
     @author Lars Stratmann
     @Version 2.0
-    @modified: 13.06.2019
+    @modified: 20.06.2019
 
     What does the Program:
         This Software capture a Image with a camera over the USB port.
@@ -65,7 +65,7 @@ saveButton = None
 abortButton = None
 
 # in seconds
-screenSaverStartTime = 30
+screenSaverStartTime = 300
 
 pictureLocationLock = Lock()
 capturedEvent = Event()
@@ -83,11 +83,8 @@ class Camera(Thread):
 
     finishCaptureEvent = Event()
 
-    startCapturing = False
 
-    picturePreviewSubProcess = None
 
-    tmp1Event = Event()
 
     # TODO subProcess Var for the preview Stream
     #previewStream = ""
@@ -97,6 +94,8 @@ class Camera(Thread):
 
         Thread.setName(self, "Camera")
 
+        self.startCapturing = False
+
     def run(self):
         while True:
             self.startPreviewEvent.wait()
@@ -104,14 +103,17 @@ class Camera(Thread):
             # preview
             self.start_video_preview_process()
 
-            # TODO wait for subProcess Camera Stream closed
-            self.tmp1Event.wait()
+            # wait for subProcess Camera Stream closed
+            self.videoPreviewSubProcess.wait()
 
             if(self.startCapturing):
                 self.capture()
 
                 # Das Event brauchen wir vllt nicht wenn wir die wait Funktion des Subprocess nutzen
                 #self.finishCaptureEvent.wait()
+
+                # wait for subProcess Picture Preview closed
+                self.picturePreviewSubProcess.wait()
 
 
     def start_preview(self):
@@ -122,52 +124,69 @@ class Camera(Thread):
 
         self.stop_video_preview_process()
 
-        # TODO Only for TEST
-        self.tmp1Event.set()
-        self.tmp1Event.clear()
+        self.stop_picture_preview_process()
+
 
     def start_capturing(self):
+
         self.startCapturing = True
+
+        self.stop_video_preview_process()
+
 
     def is_set(self):
         return self.startPreviewEvent.is_set()
 
     def start_picture_preview_process(self):
-       # self.picturePreviewSubProcess = subprocess.Popen('vlc', shell=True, stdin=subprocess.PIPE)
 
         # The os.setsid() is passed in the argument preexec_fn so
         # it's run after the fork() and before  exec() to run the shell.
-        self.picturePreviewSubProcess = subprocess.Popen("vlc", stdout=subprocess.PIPE, shell=True, preexec_fn=os.setsid)
+        self.picturePreviewSubProcess = subprocess.Popen("vlc '/home/lars/Bilder/tmp.jpg'", shell=True, preexec_fn=os.setsid)
+
+        print("Start Picture preview")
+
 
         #previewPictureCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 '
+        #self.picturePreviewSubProcess = subprocess.Popen(previewPictureCommand, shell=True, stdout=False, stdin=subprocess.PIPE)
 
-        #self.picturePreviewSubProcess = subprocess.Popen(previewPictureCommand, shell=True, stdout=False,
-                                                         stdin=subprocess.PIPE)
     def stop_picture_preview_process(self):
-        #self.picturePreviewSubProcess.close()
 
         # Send the signal to all the process groups
         os.killpg(os.getpgid(self.picturePreviewSubProcess.pid), signal.SIGTERM)
+        print("Stop Picture preview")
+
 
     # local function
     def start_video_preview_process(self):
 
         # TODO Subprocess Preview Stream
+        self.videoPreviewSubProcess = subprocess.Popen("vlc '/home/lars/Bilder/pre.jpg'", shell=True, preexec_fn=os.setsid)
+
+
         print("Start Camera preview, need implementation")
+
+        Event().wait(0.3)
 
 
     # local function
     def stop_video_preview_process(self):
 
         # TODO Stop Subprocess Preview Stream
+        os.killpg(os.getpgid(self.videoPreviewSubProcess.pid), signal.SIGTERM)
+
         print("Stop Camera preview, need implementation")
 
 
     # local function
     def capture(self):
+        global captured
+
         # TODO Subprocess Camera Capturing
 
-        self.captured = True
+        Event().wait(2)
+
+        captured = True
+        print("Image captured")
 
         # TODO start preview Subprocess
         self.start_picture_preview_process()
@@ -311,9 +330,7 @@ class Countdown(Thread):
                     # TODO clear previewEvent and start capture
                     # Der Boolean wird auf True gesetzt es wird auf das wait vom Preview stream Subprocess gewartet
                     threads["Camera"].start_capturing()
-                    threads["Camera"].stop_preview()
-
-                    print("Preview Thread stoped")
+                    #threads["Camera"].stop_preview()
 
                 #counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 ' + counterPath + str(i) + '.png'
 
@@ -345,11 +362,13 @@ def getButton():
 
 # TODO add function
 def saveImage():
+    Event().wait(1)
     print("Image Saved")
 
 
 # TODO add function
 def deleteImage():
+    Event().wait(1)
     print("Image delete")
 
 
@@ -377,8 +396,8 @@ if __name__ == '__main__':
         screenSaverThread.update_last_interaction()
 
 
-        if(captured):
-            cameraThread.stop_picture_preview_process()
+        #if(captured):
+        #    cameraThread.stop_picture_preview_process()
 
 
         # ScreenSaver Thread stop
@@ -394,12 +413,12 @@ if __name__ == '__main__':
                 # TODO Close the previewPictureProcess
                 cameraThread.stop_picture_preview_process()
 
-                cameraThread.start_video_preview_process()
-
                 # TODO Save Image
                 saveImage()
 
                 captured = False
+
+                #cameraThread.start_video_preview_process()
 
             else:
                 # Start countdown
@@ -413,10 +432,14 @@ if __name__ == '__main__':
                 # TODO Close the previewPictureProcess
                 cameraThread.stop_picture_preview_process()
 
-                cameraThread.start_video_preview_process()
-
                 # TODO Save Image
                 saveImage()
+
+                captured = False
+
+                #cameraThread.start_video_preview_process()
+
+                Event().wait(1)
 
                 # TODO Start countdown
                 # Start countdown
@@ -424,14 +447,13 @@ if __name__ == '__main__':
                 capturedEvent.wait()
                 capturedEvent.clear()
 
-                captured = False
 
         elif(button == "a"):
             if(captured):
                 # TODO Close the previewPictureProcess
                 cameraThread.stop_picture_preview_process()
 
-                cameraThread.start_video_preview_process()
+                #cameraThread.start_video_preview_process()
 
                 deleteImage()
                 captured = False
