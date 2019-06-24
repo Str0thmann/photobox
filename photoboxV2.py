@@ -51,6 +51,7 @@ import subprocess
 import os
 import signal
 import glob
+import atexit
 import random
 from PIL import Image
 from gpiozero import Button
@@ -91,6 +92,14 @@ capturedEvent = Event()
 
 # Subprocess preview
 picturePreviewSubProcess = None
+
+
+def exit_handler():
+    print('My application is ending!')
+    threads["Camera"].stop_preview()
+    threads["ScreenSaver"].stop_screen_saver()
+
+    #threads["LedRingControl"].stopLeds()
 
 class Camera(Thread):
     global threads
@@ -470,6 +479,10 @@ def deleteImage():
     lastCapturedImage = ""
 
 if __name__ == '__main__':
+
+    # if the program close all processes will be closed
+    atexit.register(exit_handler)
+
 
     cameraThread = Camera()
     cameraThread.start()
