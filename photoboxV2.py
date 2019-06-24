@@ -38,11 +38,7 @@
         Nikon XXX
         Adafruit LED RGB Ring
 
-    TODO Preview Picture subprocess FIX
-
-    TODO add the subprocess for the Camera
-
-    TODO Captured Image Check
+    TODO FIX if the screensaver start a picture is captured
 
     TODO LedControl
 
@@ -93,7 +89,7 @@ capturedEvent = Event()
 
 
 
-# TODO Subprocess preview
+# Subprocess preview
 picturePreviewSubProcess = None
 
 class Camera(Thread):
@@ -103,8 +99,6 @@ class Camera(Thread):
     startPreviewEvent = Event()
 
     finishCaptureEvent = Event()
-
-    #picturePreviewSubProcess = None
 
     def __init__(self):
         Thread.__init__(self)
@@ -187,7 +181,7 @@ class Camera(Thread):
     # local function
     def start_video_preview_process(self):
 
-        # TODO Subprocess Preview Stream
+        # Subprocess Preview Stream
 
         if(devModus):
             videoPreviewCommand = "feh '" + imageDirectory + "pre.jpg'"
@@ -199,15 +193,15 @@ class Camera(Thread):
         # it's run after the fork() and before  exec() to run the shell.
         self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid)
 
-        print("Start Camera preview, need implementation")
+        print("Start Camera preview")
 
-        Event().wait(0.3)
+        #Event().wait(0.3)
 
 
     # local function
     def stop_video_preview_process(self):
 
-        # TODO Stop Subprocess Preview Stream
+        # Stop Subprocess Preview Stream
         os.killpg(os.getpgid(self.videoPreviewSubProcess.pid), signal.SIGTERM)
 
         print("Stop Camera video preview")
@@ -220,30 +214,29 @@ class Camera(Thread):
         
         Event().wait(2)
 
-        # TODO Subprocess Camera Capturing
+        # Subprocess Camera Capturing
         date = time.strftime("%Y-%m-%d-%H-%M-%S")
         # fileName = date + str(hashedName) + imageFileType
-        lastCapturedImage = imageDirectory + date + "." + imageFileType
+        lastCapturedImage = date + "." + imageFileType
 
-        captureCommmand = "gphoto2 --keep --capture-image-and-download --stdout > " + lastCapturedImage
+        captureCommmand = "gphoto2 --keep --capture-image-and-download --stdout > " + imageDirectory + lastCapturedImage
 
         subprocess.Popen(captureCommmand, shell=True, stdout=False, stdin=False).wait()
         captured = True
 
         try:
-            #lastCapturedImage = imageDirectory + lastCapturedImage
 
-            checkImg = Image.open(lastCapturedImage)
+            checkImg = Image.open(imageDirectory + lastCapturedImage)
             print("Image captured")
 
         except:
             print("Image cant captured")
-            os.remove(lastCapturedImage)
+            os.remove(imageDirectory + lastCapturedImage)
 
             lastCapturedImage = noImageCapturedInfo
 
 
-        # TODO start preview Subprocess
+        # start preview Subprocess
         self.start_picture_preview_process()
 
         capturedEvent.set()
@@ -263,8 +256,6 @@ class ScreenSaver(Thread):
         self.startScreenSaverEvent.set()
         self.lastInteraction = time.time()
 
-        self.globalPictures = glob.glob('*.' + imageFileType)
-
 
     def run(self):
 
@@ -279,8 +270,15 @@ class ScreenSaver(Thread):
                 self.diashow()
 
     def start_screen_saver(self):
+        global captured
+
         self.startScreenSaverEvent.set()
         self.diashowDelayEvent.clear()
+
+        # Save Image
+        saveImage()
+
+        captured = False
 
         threads['Camera'].stop_preview()
 
@@ -295,39 +293,26 @@ class ScreenSaver(Thread):
         self.lastInteraction = time.time()
 
     def diashow(self):
+        global diashowTime
 
 
         self.globalPictures = glob.glob(imageDirectory + '*.' + imageFileType)
 
         while not self.diashowDelayEvent.is_set():
-            # TODO show Picutres
-            print("Diashow")
 
             if(len(self.globalPictures) == 0):
-                tmpDisplayImage = imageDirectory + noImageFound
-
-            else:
-                tmpDisplayImage = str(self.globalPictures[random.randint(0, len(self.globalPictures) - 1)])
-
-            if(devModus):
-
-                pro = subprocess.Popen("feh '" + tmpDisplayImage + "'", shell=True, preexec_fn=os.setsid)
-
-
-                self.diashowDelayEvent.wait(5)
-
-                os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
+                imageViewCommand = 'feh -xFY ' + noImageFound
 
             else:
                 #imageViewCommand = 'feh -xFY ' + tmpDisplayImage
                 #imageViewCommand = 'raspidmx/pngview/pngview -b 0 -l 3 -t 10000 ' + tmpDisplayImage
 
-                imageViewCommand = 'cd ' + imageDirectory +  '; feh -xFYz -D 5'
+                imageViewCommand = 'cd ' + imageDirectory + '; feh -xFYz -D ' + diashowTime
 
-                pro = subprocess.Popen(imageViewCommand, shell=True, preexec_fn=os.setsid)
-                #Event().wait(10)
-                self.diashowDelayEvent.wait()
-                os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
+            pro = subprocess.Popen(imageViewCommand, shell=True, preexec_fn=os.setsid)
+
+            self.diashowDelayEvent.wait()
+            os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
 
     def stock_photos(self):
         pass
@@ -448,7 +433,6 @@ def getButton():
 
     return inputCommand
 
-# TODO add function
 def saveImage():
     global lastCapturedImage
     if(lastCapturedImage != noImageCapturedInfo):
@@ -463,7 +447,6 @@ def saveImage():
 
     lastCapturedImage = ""
 
-# TODO add function
 def deleteImage():
     global lastCapturedImage
 
@@ -502,25 +485,17 @@ if __name__ == '__main__':
         #button = input("Please enter: ")
         screenSaverThread.update_last_interaction()
 
-
-        #if(captured):
-        #    cameraThread.stop_picture_preview_process()
-
-
-        # ScreenSaver Thread stop
         if(screenSaverThread.is_set()):
-            # TODO Stop screenSaver
             screenSaverThread.stop_screen_saver()
 
-            # TODO Start Preview
             cameraThread.start_preview()
 
         elif(button == "c"):
             if(captured):
-                # TODO Close the previewPictureProcess
+                # Close the previewPictureProcess
                 cameraThread.stop_picture_preview_process()
 
-                # TODO Save Image
+                # Save Image
                 saveImage()
 
                 captured = False
@@ -534,17 +509,16 @@ if __name__ == '__main__':
 
         elif(button == "r"):
             if(captured):
-                # TODO Close the previewPictureProcess
+                # Close the previewPictureProcess
                 cameraThread.stop_picture_preview_process()
 
-                # TODO Save Image
+                # Save Image
                 saveImage()
 
                 captured = False
 
                 Event().wait(1)
 
-                # TODO Start countdown
                 # Start countdown
                 countdownThread.start_countdown()
                 capturedEvent.wait()
@@ -553,7 +527,7 @@ if __name__ == '__main__':
 
         elif(button == "a"):
             if(captured):
-                # TODO Close the previewPictureProcess
+                # Close the previewPictureProcess
                 cameraThread.stop_picture_preview_process()
 
                 deleteImage()
