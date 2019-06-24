@@ -3,7 +3,7 @@
 
     @author Lars Stratmann
     @Version 2.0
-    @modified: 20.06.2019
+    @modified: 24.06.2019
 
     What does the Program:
         This Software capture a Image with a camera over the USB port.
