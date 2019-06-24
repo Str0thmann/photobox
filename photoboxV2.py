@@ -432,20 +432,21 @@ class Countdown(Thread):
 
 def getButton():
     inputCommand = ""
-    if (captureButton.wait_for_press() or reCaptureButton.wait_for_press() or abortButton.wait_for_press()):
-        if (captureButton.is_pressed):
-            inputCommand = 'c'
-            captureButton.wait_for_release()
+    while(not captureButton.is_pressed and not reCaptureButton.is_pressed and not abortButton.is_pressed):
+        pass
+    if (captureButton.is_pressed):
+        inputCommand = 'c'
+        captureButton.wait_for_release()
 
-        elif (reCaptureButton.is_pressed):
-            inputCommand = 'r'
-            reCaptureButton.wait_for_release()
+    elif (reCaptureButton.is_pressed):
+        inputCommand = 'r'
+        reCaptureButton.wait_for_release()
 
-        elif (abortButton.ispressed):
-            inputCommand = 'a'
-            abortButton.wait_for_release()
-        else:
-            inputCommand = "nothing"
+    elif (abortButton.ispressed):
+        inputCommand = 'a'
+        abortButton.wait_for_release()
+    else:
+        inputCommand = "nothing"
 
     return inputCommand
 
