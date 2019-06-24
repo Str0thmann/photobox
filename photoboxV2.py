@@ -79,8 +79,8 @@ diashowTime = 5
 
 
 captureButton = Button(27)
-reCaptureButton = Button(22)
-abortButton = Button(17)
+reCaptureButton = Button(17)
+abortButton = Button(22)
 
 # in seconds
 screenSaverStartTime = 120
@@ -443,7 +443,7 @@ def getButton():
 
         elif (abortButton.ispressed):
             inputCommand = 'a'
-            reCaptureButton.wait_for_release()
+            abortButton.wait_for_release()
         else:
             inputCommand = "nothing"
 
