@@ -38,8 +38,6 @@
         Nikon XXX
         Adafruit LED RGB Ring
 
-    TODO FIX if the screensaver start a picture is captured
-
     TODO LedControl
 
     TODO pngview check implement
@@ -71,7 +69,7 @@ noImageFound = "Files/noImageFound.jpg"
 
 
 saveOnServer = False
-serverImageDirectory = ""
+serverImageDirectory = "/home/pi/server/"
 
 
 # The Time how long a picture will be show
@@ -277,7 +275,6 @@ class ScreenSaver(Thread):
     def run(self):
 
         while True:
-            # TODO testen ob Probleme fuer negativ Werte aufftreten
             self.startScreenSaverEvent.wait(screenSaverStartTime - (time.time() - self.lastInteraction))
 
             if(time.time() - self.lastInteraction  > screenSaverStartTime):
@@ -414,7 +411,6 @@ class Countdown(Thread):
 
             try:
                 if (i == 2):
-                    # TODO clear previewEvent and start capture
                     # Der Boolean wird auf True gesetzt es wird auf das wait vom Preview stream Subprocess gewartet
                     threads["Camera"].start_capturing()
 
