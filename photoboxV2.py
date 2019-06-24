@@ -430,23 +430,27 @@ class Countdown(Thread):
                 print("Error programm pngview or counter file not found")
 
 
+
 def getButton():
     inputCommand = ""
-    while(not captureButton.is_pressed and not reCaptureButton.is_pressed and not abortButton.is_pressed):
-        pass
-    if (captureButton.is_pressed):
-        inputCommand = 'c'
-        captureButton.wait_for_release()
 
-    elif (reCaptureButton.is_pressed):
-        inputCommand = 'r'
-        reCaptureButton.wait_for_release()
 
-    elif (abortButton.is_pressed):
-        inputCommand = 'a'
-        abortButton.wait_for_release()
-    else:
-        inputCommand = "nothing"
+    while(inputCommand == ""):
+
+        Event().wait(0.1)
+
+        if (captureButton.is_pressed):
+            inputCommand = 'c'
+            captureButton.wait_for_release()
+
+        if (reCaptureButton.is_pressed):
+            inputCommand = 'r'
+            reCaptureButton.wait_for_release()
+
+        if (abortButton.is_pressed):
+            inputCommand = 'a'
+            abortButton.wait_for_release()
+
 
     return inputCommand
 
