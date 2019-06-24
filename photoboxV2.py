@@ -78,7 +78,7 @@ diashowTime = 5
 
 
 captureButton = Button(27)
-saveButton = Button(22)
+reCaptureButton = Button(22)
 abortButton = Button(17)
 
 # in seconds
@@ -423,18 +423,18 @@ class Countdown(Thread):
 
 def getButton():
     inputCommand = ""
-    if (captureButton.wait_for_press() or saveButton.wait_for_press() or abortButton.wait_for_press()):
+    if (captureButton.wait_for_press() or reCaptureButton.wait_for_press() or abortButton.wait_for_press()):
         if (captureButton.is_pressed):
             inputCommand = 'c'
             captureButton.wait_for_release()
 
-        elif (saveButton.is_pressed):
-            inputCommand = 's'
-            saveButton.wait_for_release()
+        elif (reCaptureButton.is_pressed):
+            inputCommand = 'r'
+            reCaptureButton.wait_for_release()
 
         elif (abortButton.ispressed):
             inputCommand = 'a'
-            saveButton.wait_for_release()
+            reCaptureButton.wait_for_release()
         else:
             inputCommand = "nothing"
 
