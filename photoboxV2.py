@@ -57,13 +57,15 @@ import signal
 import glob
 import random
 from PIL import Image
+from gpiozero import Button
+
 
 # boolean for Develop Modus
-devModus = True
+devModus = False
 
 threads = {}
 captured = False
-imageDirectory = "/home/lars/Bilder/"
+imageDirectory = "/home/pi/Pictures/"
 imageFileType = "jpg"
 lastCapturedImage = "tmp.jpg"
 
@@ -79,12 +81,12 @@ serverImageDirectory = ""
 diashowTime = 5
 
 
-captureButton = None
-saveButton = None
-abortButton = None
+captureButton = Button(27)
+saveButton = Button(22)
+abortButton = Button(17)
 
 # in seconds
-screenSaverStartTime = 30
+screenSaverStartTime = 120
 
 pictureLocationLock = Lock()
 capturedEvent = Event()
@@ -101,6 +103,8 @@ class Camera(Thread):
     startPreviewEvent = Event()
 
     finishCaptureEvent = Event()
+
+    #picturePreviewSubProcess = None
 
     def __init__(self):
         Thread.__init__(self)
@@ -142,10 +146,15 @@ class Camera(Thread):
     def stop_preview(self):
         self.startPreviewEvent.clear()
 
-        self.stop_video_preview_process()
-
-        self.stop_picture_preview_process()
-
+        try:
+            self.stop_video_preview_process()
+        except:
+            pass
+        #if(self.pucturePreviewSubProcess != None):
+        try:
+            self.stop_picture_preview_process()
+        except:
+            pass
 
     def start_capturing(self):
 
@@ -208,11 +217,13 @@ class Camera(Thread):
     def capture(self):
         global captured
         global lastCapturedImage
+        
+        Event().wait(2)
 
         # TODO Subprocess Camera Capturing
         date = time.strftime("%Y-%m-%d-%H-%M-%S")
         # fileName = date + str(hashedName) + imageFileType
-        lastCapturedImage = date + imageFileType
+        lastCapturedImage = imageDirectory + date + "." + imageFileType
 
         captureCommmand = "gphoto2 --keep --capture-image-and-download --stdout > " + lastCapturedImage
 
@@ -220,7 +231,7 @@ class Camera(Thread):
         captured = True
 
         try:
-            lastCapturedImage = imageDirectory + lastCapturedImage
+            #lastCapturedImage = imageDirectory + lastCapturedImage
 
             checkImg = Image.open(lastCapturedImage)
             print("Image captured")
@@ -293,7 +304,7 @@ class ScreenSaver(Thread):
             print("Diashow")
 
             if(len(self.globalPictures) == 0):
-                tmpDisplayImage = noImageFound
+                tmpDisplayImage = imageDirectory + noImageFound
 
             else:
                 tmpDisplayImage = str(self.globalPictures[random.randint(0, len(self.globalPictures) - 1)])
@@ -308,9 +319,15 @@ class ScreenSaver(Thread):
                 os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
 
             else:
-                imageViewCommand = '../raspidmx/pngview/pngview -b 0 -l 3 -t 5000 ' + imageDirectory + tmpDisplayImage
+                #imageViewCommand = 'feh -xFY ' + tmpDisplayImage
+                #imageViewCommand = 'raspidmx/pngview/pngview -b 0 -l 3 -t 10000 ' + tmpDisplayImage
 
-                subprocess.Popen(imageViewCommand, shell=True).wait()
+                imageViewCommand = 'cd ' + imageDirectory +  '; feh -xFYz -D 5'
+
+                pro = subprocess.Popen(imageViewCommand, shell=True, preexec_fn=os.setsid)
+                #Event().wait(10)
+                self.diashowDelayEvent.wait()
+                os.killpg(os.getpgid(pro.pid), signal.SIGTERM)
 
     def stock_photos(self):
         pass
@@ -404,7 +421,7 @@ class Countdown(Thread):
                     print("Picture: " + str(i))
                     Event().wait(1)
                 else:
-                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 ' + imageDirectory + str(i) + '.png'
+                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 ' + "Files/counterPictures/counterWhite/" + str(i) + '.png'
 
                     subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE).wait()
 
@@ -481,8 +498,8 @@ if __name__ == '__main__':
 
     # Main Event
     while True:
-        #button = getButton()
-        button = input("Please enter: ")
+        button = getButton()
+        #button = input("Please enter: ")
         screenSaverThread.update_last_interaction()
 
 
