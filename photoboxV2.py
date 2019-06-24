@@ -483,6 +483,7 @@ if __name__ == '__main__':
 
     # if the program close all processes will be closed
     atexit.register(exit_handler)
+    signal.signal(signal.SIGINT, exit_handler)
 
 
     cameraThread = Camera()
