@@ -157,12 +157,17 @@ class Camera(Thread):
         self.stop_video_preview_process()
 
 
+
     def is_set(self):
         return self.startPreviewEvent.is_set()
 
     def start_picture_preview_process(self):
 
-        picturePreviewCommand = "feh -xFY " + lastCapturedImage
+        if(lastCapturedImage != noImageCapturedInfo):
+
+            picturePreviewCommand = "feh -xFY " + imageDirectory + lastCapturedImage
+        else:
+            picturePreviewCommand = "feh -xFY " + lastCapturedImage
 
         # The os.setsid() is passed in the argument preexec_fn so
         # it's run after the fork() and before  exec() to run the shell.
@@ -211,7 +216,10 @@ class Camera(Thread):
     def capture(self):
         global captured
         global lastCapturedImage
-        
+        global capturedEvent
+
+        self.startCapturing = False
+
         Event().wait(2)
 
         # Subprocess Camera Capturing
@@ -400,7 +408,6 @@ class Countdown(Thread):
                     # TODO clear previewEvent and start capture
                     # Der Boolean wird auf True gesetzt es wird auf das wait vom Preview stream Subprocess gewartet
                     threads["Camera"].start_capturing()
-                    #threads["Camera"].stop_preview()
 
                 if(devModus):
                     print("Picture: " + str(i))
