@@ -307,7 +307,7 @@ class ScreenSaver(Thread):
                 #imageViewCommand = 'feh -xFY ' + tmpDisplayImage
                 #imageViewCommand = 'raspidmx/pngview/pngview -b 0 -l 3 -t 10000 ' + tmpDisplayImage
 
-                imageViewCommand = 'cd ' + imageDirectory + '; feh -xFYz -D ' + diashowTime
+                imageViewCommand = 'cd ' + imageDirectory + '; feh -xFYz -D ' + str(diashowTime)
 
             pro = subprocess.Popen(imageViewCommand, shell=True, preexec_fn=os.setsid)
 
