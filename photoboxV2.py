@@ -442,7 +442,7 @@ def getButton():
         inputCommand = 'r'
         reCaptureButton.wait_for_release()
 
-    elif (abortButton.ispressed):
+    elif (abortButton.is_pressed):
         inputCommand = 'a'
         abortButton.wait_for_release()
     else:
