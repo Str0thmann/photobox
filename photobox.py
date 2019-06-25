@@ -64,8 +64,8 @@ imageDirectory = "/home/pi/Pictures/"
 imageFileType = "jpg"
 lastCapturedImage = "tmp.jpg"
 
-noImageCapturedInfo = "Files/keinFotofuerDich2.jpg"
-noImageFound = "Files/noImageFound.jpg"
+noImageCapturedInfo = os.getcwd() + "/" + "Files/keinFotofuerDich2.jpg"
+noImageFound = os.getcwd() + "/" + "Files/noImageFound.jpg"
 
 
 saveOnServer = False
