@@ -486,6 +486,7 @@ if __name__ == '__main__':
     atexit.register(exit_handler)
     signal.signal(signal.SIGINT, exit_handler)
 
+    Event().wait(10)
 
     cameraThread = Camera()
     cameraThread.start()
