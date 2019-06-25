@@ -47,6 +47,7 @@ from threading import Thread, Event, Lock
 import time
 import subprocess
 import os
+from sys import path
 import signal
 import glob
 import atexit
@@ -64,8 +65,8 @@ imageDirectory = "/home/pi/Pictures/"
 imageFileType = "jpg"
 lastCapturedImage = "tmp.jpg"
 
-noImageCapturedInfo = os.getcwd() + "/" + "Files/keinFotofuerDich2.jpg"
-noImageFound = os.getcwd() + "/" + "Files/noImageFound.jpg"
+noImageCapturedInfo = path[0] + "/" + "Files/keinFotofuerDich2.jpg"
+noImageFound = path[0] + "/" + "Files/noImageFound.jpg"
 
 
 saveOnServer = False
