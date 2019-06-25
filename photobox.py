@@ -63,7 +63,7 @@ threads = {}
 captured = False
 imageDirectory = "/home/pi/Pictures/"
 imageFileType = "jpg"
-lastCapturedImage = "tmp.jpg"
+lastCapturedImage = ""
 
 noImageCapturedInfo = path[0] + "/" + "Files/keinFotofuerDich2.jpg"
 noImageFound = path[0] + "/" + "Files/noImageFound.jpg"
@@ -419,7 +419,7 @@ class Countdown(Thread):
                     print("Picture: " + str(i))
                     Event().wait(1)
                 else:
-                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 ' + "Files/counterPictures/counterWhite/" + str(i) + '.png'
+                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 ' + path[0] + "/Files/counterPictures/counterWhite/" + str(i) + '.png'
 
                     subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE).wait()
 
