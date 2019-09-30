@@ -61,7 +61,8 @@ devModus = False
 
 threads = {}
 captured = False
-imageDirectory = "/home/pi/Pictures/"
+#imageDirectory = "/home/pi/Pictures/"
+imageDirectory = "/home/pi/server/"
 imageFileType = "jpg"
 lastCapturedImage = ""
 
@@ -117,7 +118,8 @@ class Camera(Thread):
 
         subprocess.Popen('mkfifo fifo.mjpg', shell=True, stdout=False, stdin=subprocess.PIPE).wait()
 
-        # Kill all gphoto2 processes
+        # Kill all gphoto2 processe
+
         subprocess.Popen('killall /usr/lib/gvfs/gvfs-gphoto2-volume-monitor', shell=True, stdout=False, stdin=False).wait()
         subprocess.Popen('killall /usr/lib/gvfs/gvfsd-gphoto2', shell=True, stdout=False, stdin=False).wait()
 
@@ -485,6 +487,8 @@ if __name__ == '__main__':
     # if the program close all processes will be closed
     atexit.register(exit_handler)
     signal.signal(signal.SIGINT, exit_handler)
+
+    Event().wait(10)
 
 
     cameraThread = Camera()
