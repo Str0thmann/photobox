@@ -557,9 +557,15 @@ if __name__ == '__main__':
     screenSaverThread = ScreenSaver()
     screenSaverThread.start()
 
+    ledRing1Thread = LedRingControl()
+    ledRing1Thread.start()
+
+    # TODO documentation fehlt, was macht das thread.update
+
     threads.update({cameraThread.getName(): cameraThread})
     threads.update({countdownThread.getName(): countdownThread})
     threads.update({screenSaverThread.getName(): screenSaverThread})
+    threads.update({ledRing1Thread.getName(): ledRing1Thread})
 
 
 
