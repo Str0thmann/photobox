@@ -3,7 +3,7 @@
 
     @author Lars Stratmann
     @Version 2.0
-    @modified: 24.06.2019
+    @modified: 29.09.2019
 
     What does the Program:
         This Software capture a Image with a camera over the USB port.
@@ -38,6 +38,10 @@
         Nikon XXX
         Adafruit LED RGB Ring
 
+    TODO exception picture screen saver between each picture change, if nothing is found print no picture
+
+    TODO please smile picture for the 2 seconds before taking the picture
+
     TODO LedControl
 
     TODO pngview check implement
@@ -54,6 +58,9 @@ import atexit
 import random
 from PIL import Image
 from gpiozero import Button
+import board
+import neopixel
+
 
 
 # boolean for Develop Modus
@@ -92,6 +99,10 @@ capturedEvent = Event()
 
 # Subprocess preview
 picturePreviewSubProcess = None
+
+# LED initial
+ledCyclePin = board.D18
+ORDER = neopixel.GRB
 
 
 def exit_handler():
@@ -341,7 +352,9 @@ class LedRingControl(Thread):
     ledCountdownEvent = Event()
 
     # TODO add LED variables
-    ledPins = 12
+    ledPixels = 12
+
+    pixels = neopixel.NeoPixel(ledCyclePin, ledPixels)
 
     def __init__(self):
         Thread.__init__(self)
@@ -349,10 +362,13 @@ class LedRingControl(Thread):
 
 
     def run(self):
+
+        self.led_ring_function_rainbow_cycle(0.001)
+
         while True:
             self.ledCountdownEvent.wait()
 
-            self.led_ring_function()
+            self.led_ring_function_countdown()
 
 
     # local
@@ -363,7 +379,7 @@ class LedRingControl(Thread):
     def reset_led_ring(self):
         pass
 
-    def led_ring_function(self, countdown):
+    def led_ring_function_countdown(self, countdown):
 
         while(countdown > 0):
             self.increase_led_ring()
@@ -373,12 +389,56 @@ class LedRingControl(Thread):
 
         # TODO wait for: capture finished
 
+    def wheel(self, pos):
+        # Input a value 0 to 255 to get a color value.
+        # The colours are a transition r - g - b - back to r.
+        if pos < 0 or pos > 255:
+            r = g = b = 0
+        elif pos < 85:
+            r = int(pos * 3)
+            g = int(255 - pos * 3)
+            b = 0
+        elif pos < 170:
+            pos -= 85
+            r = int(255 - pos * 3)
+            g = 0
+            b = int(pos * 3)
+        else:
+            pos -= 170
+            r = 0
+            g = int(pos * 3)
+            b = int(255 - pos * 3)
+        return (r, g, b) if ORDER == neopixel.RGB or ORDER == neopixel.GRB else (r, g, b, 0)
+
+    def led_ring_function_rainbow_cycle(self, speed):
+        # rgb LED got three, 8bit colors
+        # red   0 - 255
+        # green 0 - 255
+        # blue  0 - 255
+        red = 0
+        green = 0
+        blue = 0
+        max = 255
+
+        led =  0
+
+        for j in range(255):
+            for i in range(self.ledPixels):
+                pixel_index = int()(i * 256 / self.ledPixels) + j
+                self.pixels[i] = self.wheel(pixel_index & 255)
+            self.pixels.show()
+            time.sleep(speed)
+
+
 
     def start_led_countdown_event(self):
         self.ledCountdownEvent.set()
 
     def stop_led_countdown_event(self):
         self.ledCountdownEvent.clear()
+
+    def set_led_color(self, ledNumber, rgb):
+        self.pixels[ledNumber] = (rgb[0], rgb[1], rgb[2])
 
     def set_led_on(self, ledNumber):
         pass
@@ -490,7 +550,6 @@ if __name__ == '__main__':
 
     Event().wait(10)
 
-
     cameraThread = Camera()
     cameraThread.start()
 
@@ -500,9 +559,15 @@ if __name__ == '__main__':
     screenSaverThread = ScreenSaver()
     screenSaverThread.start()
 
+    ledRing1Thread = LedRingControl()
+    ledRing1Thread.start()
+
+    # TODO documentation fehlt, was macht das thread.update
+
     threads.update({cameraThread.getName(): cameraThread})
     threads.update({countdownThread.getName(): countdownThread})
     threads.update({screenSaverThread.getName(): screenSaverThread})
+    threads.update({ledRing1Thread.getName(): ledRing1Thread})
 
 
 

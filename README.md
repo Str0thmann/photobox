@@ -10,3 +10,5 @@ Needed packages:
 sudo apt-get install libjpeg-dev
 
 pip install Pillow
+
+sudo pip3 install rpi_ws281x adafruit-circuitpython-neopixel
