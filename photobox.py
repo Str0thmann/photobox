@@ -38,6 +38,15 @@
         Nikon XXX
         Adafruit LED RGB Ring
 
+    Requires:
+        Remove for easy workflow
+        bash sudo rm /usr/share/dbus-1/services/org.gtk.vfs.GPhoto2VolumeMonitor.service
+        sudo rm /usr/share/gvfs/mounts/gphoto2.mount
+        sudo rm usr/share/gvfs/remote-volume-monitors/gphoto2.mount
+        sudo rm /usr/lib/gvfs/gvfs-gphoto2-volume-monitor
+        sudo rm /usr/lib/gvfs/gvfsd-gphoto2
+
+
     TODO exception picture screen saver between each picture change, if nothing is found print no picture
 
     TODO please smile picture for the 2 seconds before taking the picture
@@ -352,9 +361,12 @@ class LedRingControl(Thread):
     ledCountdownEvent = Event()
 
     # TODO add LED variables
-    ledPixels = 12
+    ledPixels = 24
 
     pixels = neopixel.NeoPixel(ledCyclePin, ledPixels)
+
+    startindex = 1
+    endindex = 23
 
     def __init__(self):
         Thread.__init__(self)
@@ -368,7 +380,8 @@ class LedRingControl(Thread):
         while True:
             self.ledCountdownEvent.wait()
 
-            self.led_ring_function_countdown()
+            self.led_ring_function_countdown(10)
+            #self.led_ring_function_rainbow_cycle(10)
 
 
     # local
@@ -379,13 +392,22 @@ class LedRingControl(Thread):
     def reset_led_ring(self):
         pass
 
-    def led_ring_function_countdown(self, countdown):
+    def led_ring_function_countdown(self):
 
-        while(countdown > 0):
-            self.increase_led_ring()
+        # TODO break condition
+        #while(countdown > 0):
+            #self.increase_led_ring()
+        for i in range(10, 0, -1):
 
-            countdown -= 1
-            Event().wait(1)
+            if False and self.startindex != 6 and self.startindex != 12 and self.endindex != 18 and self.endindex != 24:
+                self.pixels[self.startindex] = (255, 255, 255)
+                self.pixels[self.endindex] = (255, 255, 255)
+
+                Event().wait(1)
+
+            self.startindex += 1
+            self.endindex -= 1
+
 
         # TODO wait for: capture finished
 
@@ -409,7 +431,7 @@ class LedRingControl(Thread):
             g = int(pos * 3)
             b = int(255 - pos * 3)
         return (r, g, b) if ORDER == neopixel.RGB or ORDER == neopixel.GRB else (r, g, b, 0)
-
+    '''
     def led_ring_function_rainbow_cycle(self, speed):
         # rgb LED got three, 8bit colors
         # red   0 - 255
@@ -428,6 +450,49 @@ class LedRingControl(Thread):
                 self.pixels[i] = self.wheel(pixel_index & 255)
             self.pixels.show()
             time.sleep(speed)
+    '''
+    def led_ring_function_rainbow_cycle(self, wait):
+        r = 0
+        g = 0
+        b = 0
+        steps = 20
+        reverse = False
+        mini = 30
+        for j in range(10):
+            for i in range(self.ledPixels):
+                self.pixels[i] = (r, g, b)
+                if not reverse:
+
+                    if r < 255:
+                        r += steps
+                        if r > 255:
+                            r = 255
+                    elif g < 255:
+                        g += steps
+                        if g > 255:
+                            g = 255
+                    elif b < 255:
+                        b += steps
+                        if b > 255:
+                            b = 255
+                            reverse = True
+                else:
+                    if r > mini:
+                        r -= steps
+                        if r < mini:
+                            r = mini
+                    elif g > mini:
+                        g -= steps
+                        if g < mini:
+                            g = mini
+                    elif b > mini:
+                        b -= steps
+                        if b < mini:
+                            b = mini
+                            reverse = False
+
+                time.sleep(wait)
+
 
 
 
@@ -462,6 +527,7 @@ class Countdown(Thread):
 
             if(threads["Camera"].is_set()):
                 self.countdown(10)
+                threads["LedRingControl"].start_led_countdown_event()
 
     def start_countdown(self):
         self.countdownEvent.set()
@@ -476,6 +542,9 @@ class Countdown(Thread):
                 if (i == 2):
                     # Der Boolean wird auf True gesetzt es wird auf das wait vom Preview stream Subprocess gewartet
                     threads["Camera"].start_capturing()
+                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 2 -t 2000 ' + path[0] + "/Files/smilePictures/pleaseSmile.png"
+
+                    subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE)
 
                 if(devModus):
                     print("Picture: " + str(i))

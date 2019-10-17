@@ -73,11 +73,7 @@ def rainbow_cycle(wait):
     mini = 30
     for j in range(10):
         for i in range(pixelsC):
-            #pixel_index = (i * 256 // pixelsC) + j
-            #pixels[i] = wheel(pixel_index & 255)
-            #print(str(r) + " " +  str(g) + " " + str(b))
             pixels[i] = (r, g, b)
-            #pixels.show()
             if not reverse:
 
                 if r < 255:
