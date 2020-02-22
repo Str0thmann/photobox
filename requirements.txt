@@ -1,0 +1,5 @@
+gphoto2==2.0.0
+Pillow
+rpi_ws281x
+adafruit-circuitpython-neopixel
+gpiozero

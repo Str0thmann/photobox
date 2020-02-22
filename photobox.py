@@ -69,6 +69,8 @@ from PIL import Image
 from gpiozero import Button
 import board
 import neopixel
+import gphoto2 as gp
+import logging
 
 
 
@@ -136,6 +138,18 @@ class Camera(Thread):
 
         self.startCapturing = False
 
+        #self.contex = gp.gp_context_new()
+        #self.error, self.camera = gp.gp_camera_new()
+        #self.error = gp.gp_camera_init(self.camera, self.contex)
+
+        self._context = gp.Context()
+        self._camera = gp.Camera()
+        self._camera.init(self._context)
+
+        logging.info('Camera summary: %s',
+                     str(self._camera.get_summary(self._context)))
+
+
         subprocess.Popen('mkfifo fifo.mjpg', shell=True, stdout=False, stdin=subprocess.PIPE).wait()
 
         # Kill all gphoto2 processe
@@ -149,7 +163,7 @@ class Camera(Thread):
             self.startPreviewEvent.wait()
 
             # preview
-            self.start_video_preview_process()
+            self._start_video_preview_process()
 
             # wait for subProcess Camera Stream closed
             self.videoPreviewSubProcess.wait()
@@ -171,7 +185,7 @@ class Camera(Thread):
         self.startPreviewEvent.clear()
 
         try:
-            self.stop_video_preview_process()
+            self._stop_video_preview_process()
         except:
             pass
         #if(self.pucturePreviewSubProcess != None):
@@ -184,7 +198,7 @@ class Camera(Thread):
 
         self.startCapturing = True
 
-        self.stop_video_preview_process()
+        self._stop_video_preview_process()
 
 
 
@@ -214,7 +228,7 @@ class Camera(Thread):
 
 
     # local function
-    def start_video_preview_process(self):
+    def _start_video_preview_process(self):
 
         # Subprocess Preview Stream
 
@@ -230,11 +244,28 @@ class Camera(Thread):
 
         print("Start Camera preview")
 
-        #Event().wait(0.3)
+    def _start_video_preview(self):
+
+        # Subprocess Preview Stream
+
+        if (devModus):
+            videoPreviewCommand = "feh '" + imageDirectory + "pre.jpg'"
+
+        else:
+            #videoPreviewCommand = "gphoto2 --capture-movie --stdout > fifo.mjpg & omxplayer --layer 2 -b --live fifo.mjpg"
+            self._camera.capture_preview(self._context)
+            self._camera.capture_preview(gp.GP_CAPTURE_IMAGE)
+
+        # The os.setsid() is passed in the argument preexec_fn so
+        # it's run after the fork() and before  exec() to run the shell.
+        #self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid)
+
+        print("Start Camera preview")
+
 
 
     # local function
-    def stop_video_preview_process(self):
+    def _stop_video_preview_process(self):
 
         # Stop Subprocess Preview Stream
         os.killpg(os.getpgid(self.videoPreviewSubProcess.pid), signal.SIGTERM)
@@ -542,7 +573,7 @@ class Countdown(Thread):
                 if (i == 2):
                     # Der Boolean wird auf True gesetzt es wird auf das wait vom Preview stream Subprocess gewartet
                     threads["Camera"].start_capturing()
-                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 2 -t 2000 ' + path[0] + "/Files/smilePictures/pleaseSmile.png"
+                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 4 -t 2000 ' + path[0] + "/Files/smilePictures/pleaseSmile.png"
 
                     subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE)
 
