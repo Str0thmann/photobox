@@ -71,6 +71,7 @@ import board
 import neopixel
 import gphoto2 as gp
 import logging
+import io
 
 
 
@@ -111,6 +112,9 @@ capturedEvent = Event()
 # Subprocess preview
 picturePreviewSubProcess = None
 
+# Subprocess preview
+videoPreviewSubProcess = False
+
 # LED initial
 ledCyclePin = board.D18
 ORDER = neopixel.GRB
@@ -126,6 +130,7 @@ def exit_handler():
 class Camera(Thread):
     global threads
     global capturedEvent
+    global videoPreviewSubProcess
 
     startPreviewEvent = Event()
 
@@ -142,8 +147,10 @@ class Camera(Thread):
         #self.error, self.camera = gp.gp_camera_new()
         #self.error = gp.gp_camera_init(self.camera, self.contex)
 
-        self._context = gp.Context()
         self._camera = gp.Camera()
+        self._context = gp.gp_context_new()
+        self._context_config = gp.check_result(gp.gp_camera_init(self._camera, self._context))
+
         self._camera.init(self._context)
 
         logging.info('Camera summary: %s',
@@ -231,44 +238,48 @@ class Camera(Thread):
     def _start_video_preview_process(self):
 
         # Subprocess Preview Stream
+        first = True
+
+        self.videoPreviewSubProcess = True
 
         if(devModus):
             videoPreviewCommand = "feh '" + imageDirectory + "pre.jpg'"
+            self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid)
 
         else:
-            videoPreviewCommand = "gphoto2 --capture-movie --stdout > fifo.mjpg & omxplayer --layer 2 -b --live fifo.mjpg"
+            while self.videoPreviewSubProcess:
+                camera_file = gp.check_result(gp.gp_camera_capture_preview(self._camera))
 
-        # The os.setsid() is passed in the argument preexec_fn so
-        # it's run after the fork() and before  exec() to run the shell.
-        self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid)
+                data_file = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
+
+                image = Image.open(io.BytesIO(data_file))
+                image.save("tmp.jpg")
+
+
+                if first:
+                    videoPreviewCommand = "pqiv --actions-from-stdin -fit tmp.jpg"
+                    self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid,
+                                                                   stdin=subprocess.PIPE)
+                    first = False
+                else:
+                    self.videoPreviewSubProcess.stdin.write("reload()".encode())
+
+
+                time.sleep(0.05)
+
 
         print("Start Camera preview")
-
-    def _start_video_preview(self):
-
-        # Subprocess Preview Stream
-
-        if (devModus):
-            videoPreviewCommand = "feh '" + imageDirectory + "pre.jpg'"
-
-        else:
-            #videoPreviewCommand = "gphoto2 --capture-movie --stdout > fifo.mjpg & omxplayer --layer 2 -b --live fifo.mjpg"
-            self._camera.capture_preview(self._context)
-            self._camera.capture_preview(gp.GP_CAPTURE_IMAGE)
-
-        # The os.setsid() is passed in the argument preexec_fn so
-        # it's run after the fork() and before  exec() to run the shell.
-        #self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid)
-
-        print("Start Camera preview")
-
-
 
     # local function
     def _stop_video_preview_process(self):
 
+        self.videoPreviewSubProcess = False
+
         # Stop Subprocess Preview Stream
-        os.killpg(os.getpgid(self.videoPreviewSubProcess.pid), signal.SIGTERM)
+        if(devModus):
+            os.killpg(os.getpgid(self.videoPreviewSubProcess.pid), signal.SIGTERM)
+        else:
+            self.videoPreviewSubProcess.stdin.write("quit()".encode())
 
         print("Stop Camera video preview")
 
