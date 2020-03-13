@@ -250,7 +250,9 @@ class Camera(Thread):
 
         self.startCapturing = False
 
-        Event().wait(2)
+        Event().wait(1)
+        threads["LedRingControl"].stop_led_countdown_event()
+        threads["LedRingControl"].start_led_wait_event()
 
         # Subprocess Camera Capturing
         date = time.strftime("%Y-%m-%d-%H-%M-%S")
@@ -261,6 +263,7 @@ class Camera(Thread):
 
         subprocess.Popen(captureCommmand, shell=True, stdout=False, stdin=False).wait()
         captured = True
+
 
         try:
 
@@ -296,7 +299,6 @@ class ScreenSaver(Thread):
 
 
     def run(self):
-
         while True:
             self.startScreenSaverEvent.wait(screenSaverStartTime - (time.time() - self.lastInteraction))
 
@@ -358,7 +360,11 @@ class ScreenSaver(Thread):
 class LedRingControl(Thread):
     global threads
 
+    ledEvents = Event()
+
     ledCountdownEvent = Event()
+    ledWaitEvent = Event()
+    ledRandomEvent = Event()
 
     # TODO add LED variables
     ledPixels = 24
@@ -371,18 +377,33 @@ class LedRingControl(Thread):
     def __init__(self):
         Thread.__init__(self)
         Thread.setName(self, "LedRingControl")
+        self.pixels.fill((0,0,0))
+
 
 
     def run(self):
 
-        self.led_ring_function_rainbow_cycle(0.001)
-
+        #self.led_ring_function_rainbow_cycle(0.001)
+        #self.led_ring_function_countdown()
         while True:
-            self.ledCountdownEvent.wait()
 
-            self.led_ring_function_countdown(10)
-            #self.led_ring_function_rainbow_cycle(10)
+            self.ledEvents.wait()
+            if self.ledCountdownEvent.is_set():
 
+                self.led_ring_function_countdown(10, 0.5)
+                self.stop_led_countdown_event()
+                self.stop_led_events()
+
+            if self.ledWaitEvent.is_set():
+                self.smile(0.3, 0.2)
+                #self.led_ring_function_rainbow_cycle(0.01, 0.5)
+                self.stop_led_wait_event()
+                self.stop_led_events()
+
+            if self.ledRandomEvent.is_set():
+                self.led_random_functions()
+                self.stop_led_random_event()
+                self.stop_led_events()
 
     # local
     def increase_led_ring(self):
@@ -392,75 +413,71 @@ class LedRingControl(Thread):
     def reset_led_ring(self):
         pass
 
-    def led_ring_function_countdown(self):
+    def start_led_events(self):
+        self.ledEvents.set()
 
-        # TODO break condition
-        #while(countdown > 0):
-            #self.increase_led_ring()
-        for i in range(10, 0, -1):
+    def stop_led_events(self):
+        self.ledEvents.clear()
 
-            if False and self.startindex != 6 and self.startindex != 12 and self.endindex != 18 and self.endindex != 24:
-                self.pixels[self.startindex] = (255, 255, 255)
-                self.pixels[self.endindex] = (255, 255, 255)
+    def stop_all_led_events(self):
+        self.ledEvents.clear()
+        self.ledCountdownEvent.clear()
+        self.ledWaitEvent.clear()
+        self.ledRandomEvent.clear()
 
+    def start_led_wait_event(self):
+        self.start_led_events()
+        self.ledWaitEvent.set()
+
+    def stop_led_wait_event(self):
+        self.ledWaitEvent.clear()
+
+    def start_led_countdown_event(self):
+        self.start_led_events()
+        self.ledCountdownEvent.set()
+
+    def stop_led_countdown_event(self):
+        self.ledCountdownEvent.clear()
+
+    def start_led_random_event(self):
+        self.start_led_events()
+        self.ledRandomEvent.set()
+
+    def stop_led_random_event(self):
+        self.ledRandomEvent.clear()
+
+    def led_ring_function_countdown(self, countdown, brightness):
+
+        startindex = self.startindex
+        endindex = self.endindex
+        #self.pixels.fill((50,0,0))
+        while countdown >= 0 and self.ledCountdownEvent.is_set():
+            if startindex != 6 and startindex != 12 and endindex != 18 and endindex != 24:
+                self.pixels[startindex] = (255, 255, 255)
+                self.pixels[endindex] = (255, 255, 255)
+                self.pixels.brightness = brightness
                 Event().wait(1)
+            countdown -= 1
+            startindex += 1
+            endindex -= 1
 
-            self.startindex += 1
-            self.endindex -= 1
+        #Event().wait(1)
+        self.pixels.fill((0,0,0))
 
 
         # TODO wait for: capture finished
 
-    def wheel(self, pos):
-        # Input a value 0 to 255 to get a color value.
-        # The colours are a transition r - g - b - back to r.
-        if pos < 0 or pos > 255:
-            r = g = b = 0
-        elif pos < 85:
-            r = int(pos * 3)
-            g = int(255 - pos * 3)
-            b = 0
-        elif pos < 170:
-            pos -= 85
-            r = int(255 - pos * 3)
-            g = 0
-            b = int(pos * 3)
-        else:
-            pos -= 170
-            r = 0
-            g = int(pos * 3)
-            b = int(255 - pos * 3)
-        return (r, g, b) if ORDER == neopixel.RGB or ORDER == neopixel.GRB else (r, g, b, 0)
-    '''
-    def led_ring_function_rainbow_cycle(self, speed):
-        # rgb LED got three, 8bit colors
-        # red   0 - 255
-        # green 0 - 255
-        # blue  0 - 255
-        red = 0
-        green = 0
-        blue = 0
-        max = 255
-
-        led =  0
-
-        for j in range(255):
-            for i in range(self.ledPixels):
-                pixel_index = int()(i * 256 / self.ledPixels) + j
-                self.pixels[i] = self.wheel(pixel_index & 255)
-            self.pixels.show()
-            time.sleep(speed)
-    '''
-    def led_ring_function_rainbow_cycle(self, wait):
+    def led_ring_function_rainbow_cycle(self, wait, brightness):
         r = 0
         g = 0
         b = 0
         steps = 20
         reverse = False
         mini = 30
-        for j in range(10):
+        while self.ledWaitEvent.is_set():
             for i in range(self.ledPixels):
                 self.pixels[i] = (r, g, b)
+                self.pixels.brightness = brightness
                 if not reverse:
 
                     if r < 255:
@@ -492,15 +509,122 @@ class LedRingControl(Thread):
                             reverse = False
 
                 time.sleep(wait)
+        self.pixels.fill((0,0,0))
 
+    # created by Marius Petersen
+    def sub(self, sys, val):
+        if val > 2 * sys + 1:
+            return val - (2 * sys + 1)
+        elif val > sys:
+            return val - sys
+        elif val < 0:
+            return val + sys + 1
+        else:
+            return val
 
+    # created by Marius Petersen
+    def smile(self, wait, brightness):
+        bright = int(255 * brightness)
+        self.pixels.brightness = brightness
+        self.pixels[3] = (0, 0, bright)
+        self.pixels[21] = (0, 0, bright)
+        tmp = 11
+        for j in range(4):
+            for i in range(3 + 2 * j):
+                self.pixels[i + tmp] = (bright, bright, bright)
+                self.pixels.brightness = brightness
+            time.sleep(wait)
+            tmp = tmp - 1
+        time.sleep(wait)
+        self.pixels[3] = (0, 0, 0)
+        self.pixels[21] = (0, 0, 0)
+        time.sleep(0.2)
+        self.pixels[3] = (0, 0, bright)
+        self.pixels[21] = (0, 0, bright)
+        time.sleep(0.6)
+        self.pixels[3] = (0, 0, 0)
+        self.pixels[21] = (0, 0, 0)
+        time.sleep(0.2)
+        self.pixels[3] = (0, 0, bright)
+        self.pixels[21] = (0, 0, bright)
+        time.sleep(0.6)
+        self.pixels.fill((0,0,0))
 
+    # created by Marius Petersen
+    def wheelRed(self, wait, brightness):
+        for i in range(23):
+            if not self.ledRandomEvent.is_set():
+                break
+            for j in range(23):
+                if not self.ledRandomEvent.is_set():
+                    break
+                k = int(255 / (j ** 2 + 1))
+                self.pixels[sub(23, i - j)] = (k, 0, 0)
+                self.pixels.brightness = brightness
+            time.sleep(wait)
 
-    def start_led_countdown_event(self):
-        self.ledCountdownEvent.set()
+    # created by Marius Petersen
+    def wheel3(self, wait, fade, brightness):
+        bright = 255  # zwischen 0 und 255
+        # fade zwischen 1 und 3
+        for i in range(23):
+            if not self.ledRandomEvent.is_set():
+                break
+            for j in range(23):
+                if not self.ledRandomEvent.is_set():
+                    break
+                k1 = int(bright / (j ** fade + 1))
+                k2 = int(bright / ((j + 16) ** fade + 1))
+                k3 = int(bright / ((j + 8) ** fade + 1))
+                if j > 7:
+                    k2 = int(bright / ((j - 8) ** fade + 1))
+                if j > 15:
+                    k3 = int(bright / ((j - 16) ** fade + 1))
+                pixels[sub(23, i - j)] = (k1, k2, k3)
+                self.pixels.brightness = brightness
+            time.sleep(wait)
 
-    def stop_led_countdown_event(self):
-        self.ledCountdownEvent.clear()
+    # created by Marius Petersen
+    def wheel4(self, wait, brightness):
+        self.pixels.fill((0, 0, 0))
+        self.pixels.brightness = brightness
+        for i in range(5):
+            if not self.ledRandomEvent.is_set():
+                break
+            k = int(255 / (i ** 2 + 1))
+            self.pixels[0 + i] = (255, 0, 0)
+            for j in range(i):
+                if not self.ledRandomEvent.is_set():
+                    break
+                self.pixels[0 + j] = ((j + 1) * k, 0, 0)
+            self.pixels[6 + i] = (0, 255, 0)
+            for j in range(i):
+                if not self.ledRandomEvent.is_set():
+                    break
+                self.pixels[6 + j] = (0, (j + 1) * k, 0)
+            self.pixels[12 + i] = (0, 0, 255)
+            for j in range(i):
+                if not self.ledRandomEvent.is_set():
+                    break
+                self.pixels[12 + j] = (0, 0, (j + 1) * k)
+            self.pixels[18 + i] = (0, 0, 255)
+            for j in range(i):
+                if not self.ledRandomEvent.is_set():
+                    break
+                self.pixels[18 + j] = ((j + 1) * k, 0, (j + 1) * k)
+            time.sleep(wait)
+
+    def led_random_functions(self):
+        while self.ledRandomEvent.is_set():
+            #rand = random.randrange(1, 3)
+            rand = 1
+            if rand == 1:
+                self.wheelRed(0.3, 0.6)
+            elif rand == 2:
+                self.wheel3(0.2, 1.2, 0.6)
+            elif rand == 3:
+                self.wheel4(0.6, 0.6)
+        self.pixels.fill((0, 0, 0))
 
     def set_led_color(self, ledNumber, rgb):
         self.pixels[ledNumber] = (rgb[0], rgb[1], rgb[2])
@@ -526,8 +650,9 @@ class Countdown(Thread):
             self.countdownEvent.wait()
 
             if(threads["Camera"].is_set()):
-                self.countdown(10)
+                #self.countdown(10)
                 threads["LedRingControl"].start_led_countdown_event()
+                self.countdown(10)
 
     def start_countdown(self):
         self.countdownEvent.set()
@@ -542,15 +667,16 @@ class Countdown(Thread):
                 if (i == 2):
                     # Der Boolean wird auf True gesetzt es wird auf das wait vom Preview stream Subprocess gewartet
                     threads["Camera"].start_capturing()
-                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 2 -t 2000 ' + path[0] + "/Files/smilePictures/pleaseSmile.png"
+
+                if (i == 1):
+                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0x000F -l 3 -t 3000 ' + path[0] + "/Files/smilePictures/pleaseSmile.png"
 
                     subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE)
-
-                if(devModus):
+                elif(devModus):
                     print("Picture: " + str(i))
                     Event().wait(1)
                 else:
-                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 ' + path[0] + "/Files/counterPictures/counterWhite/" + str(i) + '.png'
+                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 4 -t 1000 ' + path[0] + "/Files/counterPictures/counterWhite/" + str(i) + '.png'
 
                     subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE).wait()
 
@@ -617,6 +743,11 @@ if __name__ == '__main__':
     atexit.register(exit_handler)
     signal.signal(signal.SIGINT, exit_handler)
 
+
+    blackBackgroundCommand = 'feh -xFY ' + path[0] + '/Files/black.jpg'
+    subprocess.Popen(blackBackgroundCommand, shell=True, stdout=False, stdin=subprocess.PIPE)
+
+
     Event().wait(10)
 
     cameraThread = Camera()
@@ -637,6 +768,12 @@ if __name__ == '__main__':
     threads.update({countdownThread.getName(): countdownThread})
     threads.update({screenSaverThread.getName(): screenSaverThread})
     threads.update({ledRing1Thread.getName(): ledRing1Thread})
+
+    #threads["LedRingControl"].start_led_countdown_event()
+
+    #Event.wait(10)
+
+    #threads["LedRingControl"].stop_led_countdown_event()
 
 
 

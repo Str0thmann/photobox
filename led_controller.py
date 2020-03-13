@@ -62,7 +62,82 @@ def wheel(pos):
         g = int(pos*3)
         b = int(255 - pos*3)
     return (r, g, b) if ORDER == neopixel.RGB or ORDER == neopixel.GRB else (r, g, b, 0)
- 
+
+def sub(sys, val):
+    if val > 2*sys+1:
+        return val - (2*sys+1)
+    elif val > sys:
+        return val-sys
+    elif val < 0:
+        return val + sys+1
+    else:
+        return val
+
+def smile(wait):
+    bright = 200
+    pixels[3] = (0,0,bright)
+    pixels[21] = (0,0,bright)
+    tmp = 11
+    for j in range(4):
+        for i in range(3+2*j):
+            pixels[i+tmp] = (bright,bright,bright)
+        time.sleep(wait)
+        tmp = tmp - 1
+    time.sleep(wait)
+    pixels[3] = (0,0,0)
+    pixels[21] = (0,0,0)
+    time.sleep(0.7*wait)
+    pixels[3] = (0,0,bright)
+    pixels[21] = (0,0,bright)
+    time.sleep(2*wait)
+    pixels[3] = (0,0,0)
+    pixels[21] = (0,0,0)
+    time.sleep(0.7*wait)
+    pixels[3] = (0,0,bright)
+    pixels[21] = (0,0,bright)
+    time.sleep(2*wait)
+
+def wheelRed(wait):
+    for i in range(23):
+        for j in range(23):
+            k = int(255/(j**2+1))
+            pixels[sub(23,i-j)] = (k,0,0)
+        time.sleep(wait)
+        
+def wheel3(wait):
+    bright = 200  # zwischen 0 und 255
+    fade = 1.2  #zwischen 1 und 3
+    for i in range(23):
+        for j in range(23):
+            k1 = int(bright/(j**fade+1))
+            k2 = int(bright/((j+16)**fade+1))
+            k3 = int(bright/((j+8)**fade+1))
+            if j > 7:
+                k2 = int(bright/((j-8)**fade+1))
+            if j > 15:
+                k3 = int(bright/((j-16)**fade+1))
+            pixels[sub(23,i-j)] = (k1,k2,k3)
+            pixels.brightness = 0.2
+        time.sleep(wait)
+
+def wheel4(wait):
+    pixels.fill((0,0,0))
+    for i in range(5):
+        k = int(255/(i**2+1))
+        pixels[0+i] = (255,0,0)
+        for j in range(i):
+            pixels[0+j] = ((j+1)*k,0,0)
+        pixels[6+i] = (0,255,0)
+        for j in range(i):
+            pixels[6+j] = (0,(j+1)*k,0)
+        pixels[12+i] = (0,0,255)
+        for j in range(i):
+            pixels[12+j] = (0,0,(j+1)*k)
+        pixels[18+i] = (0,0,255)
+        for j in range(i):
+            pixels[18+j] = ((j+1)*k,0,(j+1)*k)
+        time.sleep(wait)
+
  
 def rainbow_cycle(wait):
     r = 0
@@ -106,7 +181,11 @@ def rainbow_cycle(wait):
 
             time.sleep(wait)
 
-rainbow_cycle(0.03)
+#rainbow_cycle(0.03)
+#wheel4(0.6)
+#wheelRed(0.3)
+#wheel3(0.2)
+#smile(0.3)
+
 
 pixels.fill((0,0,0)) 
- 
