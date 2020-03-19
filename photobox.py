@@ -39,12 +39,29 @@
         Adafruit LED RGB Ring
 
     Requires:
-        Remove for easy workflow
+        Remove for easy workflow, cause so the camera did not start automaticly
         bash sudo rm /usr/share/dbus-1/services/org.gtk.vfs.GPhoto2VolumeMonitor.service
         sudo rm /usr/share/gvfs/mounts/gphoto2.mount
         sudo rm usr/share/gvfs/remote-volume-monitors/gphoto2.mount
         sudo rm /usr/lib/gvfs/gvfs-gphoto2-volume-monitor
         sudo rm /usr/lib/gvfs/gvfsd-gphoto2
+
+
+
+    Logging:
+        Debug:
+            - entering and leaving from Events
+        INFO:
+            - make a picture status
+            -
+        WARNING:
+            - Could not connect to Server
+            - could not make a picture -> reason
+            - could not save the image, cause not enough space
+
+        Critical:
+            - no camera found
+            - libarys not found
 
 
     TODO exception picture screen saver between each picture change, if nothing is found print no picture
@@ -72,7 +89,12 @@ import neopixel
 import gphoto2 as gp
 import logging
 import io
+import logging
 
+
+
+# setup Logging
+logging.basicConfig(filename='photobox.log', format='%(asctime)s %(message)s', level=logging.WARNING)
 
 
 # boolean for Develop Modus
