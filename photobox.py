@@ -293,6 +293,7 @@ class Camera(Thread):
 
 
         self.logger.debug("Start Camera preview")
+        self.logger.debug("videoPreviewEvent: %s", self.videoPreviewEvent.is_set())
 
         if(devModus):
             videoPreviewCommand = "feh '" + imageDirectory + "pre.jpg'"
