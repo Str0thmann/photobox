@@ -103,8 +103,8 @@ devModus = False
 
 threads = {}
 captured = False
-#imageDirectory = "/home/pi/Pictures/"
-imageDirectory = "/home/pi/server/"
+imageDirectory = "/home/pi/Pictures/"
+#imageDirectory = "/home/pi/server/"
 imageFileType = "jpg"
 lastCapturedImage = ""
 
@@ -182,7 +182,7 @@ class Camera(Thread):
 
         self.logger.info("Camera initialized")
 
-        self._camera.init(self._context)
+        #self._camera.init(self._context)
 
         self.logger.debug('Camera summary: %s', str(self._camera.get_summary(self._context)))
 
