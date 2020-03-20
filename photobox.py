@@ -95,7 +95,7 @@ import logging
 
 
 # setup Logging
-logging.basicConfig(filename=str(os.path.dirname(os.path.realpath(__file__))) + '/photobox.log', format='%(asctime)s %(module)s %(funcName)s %(lineno)d %(message)s', level=logging.DEBUG)
+logging.basicConfig(filename=str(os.path.dirname(os.path.realpath(__file__))) + '/photobox.log', format='%(asctime)s %(lineno)d %(module)s %(funcName)s %(message)s', level=logging.DEBUG)
 
 
 # boolean for Develop Modus
@@ -202,7 +202,6 @@ class Camera(Thread):
             self.startPreviewEvent.wait()
 
             # preview
-            self.logger.debug("_start_video_preview_process")
             self._start_video_preview_process()
 
             # wait for subProcess Camera Stream closed
@@ -287,11 +286,12 @@ class Camera(Thread):
 
     # local function
     def _start_video_preview_process(self):
+        self.logger.debug("_start_video_preview_process")
 
         # Subprocess Preview Stream
         first = True
 
-        self.videoPreviewEvent.set()
+
         self.logger.debug("Start Camera preview")
 
         if(devModus):
@@ -321,7 +321,8 @@ class Camera(Thread):
 
                 time.sleep(0.05)
 
-
+        self.logger.debug("set videoPreviewEvent")
+        self.videoPreviewEvent.set()
 
     # local function
     def _stop_video_preview_process(self):
