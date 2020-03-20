@@ -146,10 +146,11 @@ ORDER = neopixel.GRB
 def exit_handler():
     print('My application is ending!')
     threads["Camera"].stop_preview()
+    threads["Camera"].close_all()
     threads["ScreenSaver"].stop_screen_saver()
+    threads["LedRingControl"].turn_off_all()
     logging.info("photobox is closing")
 
-    #threads["LedRingControl"].stopLeds()
 
 class Camera(Thread):
     global threads
@@ -385,6 +386,9 @@ class Camera(Thread):
         capturedEvent.set()
 
 
+    def close_all(self):
+        self._camera.exit()
+
 class ScreenSaver(Thread):
     global threads
     startScreenSaverEvent = Event()
@@ -615,6 +619,9 @@ class LedRingControl(Thread):
 
     def set_led_off(self, ledNumber):
         pass
+
+    def turn_off_all(self):
+        self.pixels.fill((0, 0, 0))
 
 
 class Countdown(Thread):
