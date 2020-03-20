@@ -95,8 +95,7 @@ import logging
 
 
 # setup Logging
-print(os.path.dirname(os.path.realpath(__file__)))
-logging.basicConfig(filename=str(os.path.dirname(os.path.realpath(__file__))) + '/photobox.log', format='%(asctime)s %(message)s', level=logging.DEBUG)
+logging.basicConfig(filename=str(os.path.dirname(os.path.realpath(__file__))) + '/photobox.log', format='%(asctime)s %(module)s %(funcName)s %(lineno)d %(message)s', level=logging.DEBUG)
 
 
 # boolean for Develop Modus
