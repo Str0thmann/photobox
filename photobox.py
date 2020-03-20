@@ -155,7 +155,7 @@ def exit_handler():
 class Camera(Thread):
     global threads
     global capturedEvent
-    global videoPreviewEvent
+    #global videoPreviewEvent
 
     logger = logging.getLogger(__name__)
 
@@ -197,6 +197,7 @@ class Camera(Thread):
 
 
     def run(self):
+        global videoPreviewEvent
         while True:
             self.logger.debug("wait for startPreviewEvent")
             self.startPreviewEvent.wait()
@@ -206,7 +207,7 @@ class Camera(Thread):
 
             # wait for subProcess Camera Stream closed
             self.logger.debug("wait for videoPreviewSubProcess")
-            self.videoPreviewEvent.wait()
+            videoPreviewEvent.wait()
 
             if(self.startCapturing):
                 self.logger.debug("start capturing")
@@ -286,6 +287,7 @@ class Camera(Thread):
 
     # local function
     def _start_video_preview_process(self):
+        global videoPreviewEvent
         self.logger.debug("enter the function")
 
         # Subprocess Preview Stream
@@ -293,14 +295,14 @@ class Camera(Thread):
 
 
         self.logger.debug("Start Camera preview")
-        self.logger.debug("videoPreviewEvent: %s", self.videoPreviewEvent.is_set())
+        self.logger.debug("videoPreviewEvent: %s", videoPreviewEvent.is_set())
 
         if(devModus):
             videoPreviewCommand = "feh '" + imageDirectory + "pre.jpg'"
             self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid)
 
         else:
-            while not self.videoPreviewEvent.is_set():
+            while not videoPreviewEvent.is_set():
                 self.logger.debug("create preview Photo")
 
                 camera_file = gp.check_result(gp.gp_camera_capture_preview(self._camera))
@@ -323,12 +325,13 @@ class Camera(Thread):
                 time.sleep(0.05)
 
         self.logger.debug("set videoPreviewEvent")
-        self.videoPreviewEvent.set()
+        videoPreviewEvent.set()
 
     # local function
     def _stop_video_preview_process(self):
+        global videoPreviewEvent
 
-        self.videoPreviewEvent.clear()
+        videoPreviewEvent.clear()
 
         # Stop Subprocess Preview Stream
         if(devModus):
