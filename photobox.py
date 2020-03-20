@@ -286,7 +286,7 @@ class Camera(Thread):
 
     # local function
     def _start_video_preview_process(self):
-        self.logger.debug("_start_video_preview_process")
+        self.logger.debug("enter the function")
 
         # Subprocess Preview Stream
         first = True
@@ -299,7 +299,7 @@ class Camera(Thread):
             self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid)
 
         else:
-            while self.videoPreviewEvent.is_set():
+            while not self.videoPreviewEvent.is_set():
                 self.logger.debug("create preview Photo")
 
                 camera_file = gp.check_result(gp.gp_camera_capture_preview(self._camera))
