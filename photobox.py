@@ -95,7 +95,7 @@ import logging
 
 
 # setup Logging
-logging.basicConfig(filename='photobox.log', format='%(asctime)s %(message)s', level=logging.WARNING)
+logging.basicConfig(filename='photobox.log', format='%(asctime)s %(message)s', level=logging.DEBUG)
 
 
 # boolean for Develop Modus
@@ -231,15 +231,15 @@ class Camera(Thread):
         try:
             self.logger.debug("try _stop_video_preview_process")
             self._stop_video_preview_process()
-        except:
-            self.logger.warning('error in _stop_video_preview_process, i dont know what happend: %s', sys.exc_info()[0])
+        except Exception as e:
+            self.logger.warning('error in _stop_video_preview_process, i dont know what happend: %s', e)
             pass
         #if(self.pucturePreviewSubProcess != None):
         try:
             self.logger.debug("try _stop_picture_preview_process")
             self._stop_picture_preview_process()
-        except:
-            self.logger.warning('error in _stop_picture_preview_process, i dont know what happend: %s', sys.exc_info()[0])
+        except Exception as e:
+            self.logger.warning('error in _stop_picture_preview_process, i dont know what happend: %s', e)
             pass
 
     def start_capturing(self):
@@ -372,8 +372,8 @@ class Camera(Thread):
             self.logger.debug("Image captured correctly")
             image.save("tmp.jpg")
 
-        except:
-            self.logger.debug("Image cant captured: %s", sys.exc_info()[0])
+        except Exception as e:
+            self.logger.debug("Image cant captured: %s", e)
             os.remove(imageDirectory + lastCapturedImage)
 
             lastCapturedImage = noImageCapturedInfo
@@ -597,7 +597,7 @@ class LedRingControl(Thread):
                             reverse = False
 
                 time.sleep(wait)
-
+        self.pixels.fill((0, 0, 0))
 
 
 
