@@ -173,6 +173,11 @@ class Camera(Thread):
 
         self.startCapturing = False
 
+        # Kill all gphoto2 processe
+
+        subprocess.Popen('killall /usr/lib/gvfs/gvfs-gphoto2-volume-monitor', shell=True, stdout=False, stdin=False).wait()
+        subprocess.Popen('killall /usr/lib/gvfs/gvfsd-gphoto2', shell=True, stdout=False, stdin=False).wait()
+
         #self.contex = gp.gp_context_new()
         #self.error, self.camera = gp.gp_camera_new()
         #self.error = gp.gp_camera_init(self.camera, self.contex)
@@ -189,11 +194,6 @@ class Camera(Thread):
 
 
         #subprocess.Popen('mkfifo fifo.mjpg', shell=True, stdout=False, stdin=subprocess.PIPE).wait()
-
-        # Kill all gphoto2 processe
-
-        subprocess.Popen('killall /usr/lib/gvfs/gvfs-gphoto2-volume-monitor', shell=True, stdout=False, stdin=False).wait()
-        subprocess.Popen('killall /usr/lib/gvfs/gvfsd-gphoto2', shell=True, stdout=False, stdin=False).wait()
 
 
     def run(self):
