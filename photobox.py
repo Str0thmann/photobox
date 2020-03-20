@@ -251,7 +251,7 @@ class Camera(Thread):
         self._stop_video_preview_process()
 
 
-    def is_set(self):
+    def is_startPreviewEvent_set(self):
         self.logger.debug("return startPreviewEvent status: %s", self.startPreviewEvent.is_set())
         return self.startPreviewEvent.is_set()
 
@@ -639,7 +639,7 @@ class Countdown(Thread):
         while True:
             self.countdownEvent.wait()
 
-            if(threads["Camera"].is_set()):
+            if(threads["Camera"].is_startPreviewEvent_set()):
                 self.countdown(10)
                 threads["LedRingControl"].start_led_countdown_event()
 
