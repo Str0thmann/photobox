@@ -260,12 +260,14 @@ class Camera(Thread):
         if(lastCapturedImage != noImageCapturedInfo):
 
             picturePreviewCommand = "feh -xFY " + imageDirectory + lastCapturedImage
+            self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
+
         else:
-            picturePreviewCommand = "feh -xFY " + lastCapturedImage
+            #picturePreviewCommand = "feh -xFY " + lastCapturedImage
+            self.videoPreviewSubProcess.stdin.write("reload()".encode())
 
         # The os.setsid() is passed in the argument preexec_fn so
         # it's run after the fork() and before  exec() to run the shell.
-        self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
 
         self.logger.debug("Start Picture preview")
 
@@ -273,7 +275,12 @@ class Camera(Thread):
     def _stop_picture_preview_process(self):
 
         # Send the signal to all the process groups
+
+        self.videoPreviewSubProcess.stdin.write("quit()".encode())
+
         os.killpg(os.getpgid(self.picturePreviewSubProcess.pid), signal.SIGTERM)
+
+
         self.logger.debug("Stop Picture preview")
 
 
@@ -284,6 +291,7 @@ class Camera(Thread):
         first = True
 
         self.videoPreviewEvent.set()
+        self.logger.debug("Start Camera preview")
 
         if(devModus):
             videoPreviewCommand = "feh '" + imageDirectory + "pre.jpg'"
@@ -291,6 +299,8 @@ class Camera(Thread):
 
         else:
             while self.videoPreviewEvent.is_set():
+                self.logger.debug("create preview Photo")
+
                 camera_file = gp.check_result(gp.gp_camera_capture_preview(self._camera))
 
                 data_file = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
@@ -311,7 +321,6 @@ class Camera(Thread):
                 time.sleep(0.05)
 
 
-        self.logger.debug("Start Camera preview")
 
     # local function
     def _stop_video_preview_process(self):
@@ -342,18 +351,29 @@ class Camera(Thread):
         # fileName = date + str(hashedName) + imageFileType
         lastCapturedImage = date + "." + imageFileType
 
-        captureCommmand = "gphoto2 --keep --capture-image-and-download --stdout > " + imageDirectory + lastCapturedImage
+        camera_file = gp.check_result(gp.gp_camera_capture(self._camera, gp.GP_CAPTURE_IMAGE))
 
-        subprocess.Popen(captureCommmand, shell=True, stdout=False, stdin=False).wait()
+        data_file = gp.check_result(gp.gp_camera_file_get(self._camera, camera_file.folder, camera_file.name, gp.GP_FILE_TYPE_NORMAL))
+
+        data_file = gp.check_result(gp.gp_file_get_data_and_size(data_file))
+
+        image = Image.open(io.BytesIO(data_file))
+        image.save((imageDirectory + lastCapturedImage))
+
+
+        #captureCommmand = "gphoto2 --keep --capture-image-and-download --stdout > " + imageDirectory + lastCapturedImage
+
+        #subprocess.Popen(captureCommmand, shell=True, stdout=False, stdin=False).wait()
         captured = True
 
         try:
 
             checkImg = Image.open(imageDirectory + lastCapturedImage)
-            self.logger.debug("Image captured")
+            self.logger.debug("Image captured correctly")
+            image.save("tmp.jpg")
 
         except:
-            self.logger.debug("Image cant captured")
+            self.logger.debug("Image cant captured: %s", sys.exc_info()[0])
             os.remove(imageDirectory + lastCapturedImage)
 
             lastCapturedImage = noImageCapturedInfo
