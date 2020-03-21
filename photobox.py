@@ -303,7 +303,7 @@ class Camera(Thread):
 
         else:
             while not videoPreviewEvent.is_set():
-                self.logger.debug("create preview Photo")
+                #self.logger.debug("create preview Photo")
 
                 camera_file = gp.check_result(gp.gp_camera_capture_preview(self._camera))
 
