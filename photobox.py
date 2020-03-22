@@ -230,7 +230,7 @@ class Camera(Thread):
 
     def start_preview(self):
         global preview_is_running
-        self.logger.debug("set the startPreviewEvent and set preview_is_running to True-> it shouldstart")
+        self.logger.debug("set the startPreviewEvent and set preview_is_running to True-> it should start")
         self.startPreviewEvent.set()
         preview_is_running = True
 
@@ -266,38 +266,34 @@ class Camera(Thread):
 
     def start_captured_preview_process(self):
 
+        self.logger.debug("Start Picture preview")
+
         if(lastCapturedImage != noImageCapturedInfo):
 
+            self.logger.warning("Open noImageCapturedInfo in feh")
             picturePreviewCommand = "feh -xFY " + imageDirectory + lastCapturedImage
             self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
 
         else:
+            self.logger.debug("Open Captured Image in feh")
             picturePreviewCommand = "feh -xFY " + lastCapturedImage
             #self.videoPreviewSubProcess.stdin.write("reload()".encode())
             self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
 
-
         # The os.setsid() is passed in the argument preexec_fn so
         # it's run after the fork() and before  exec() to run the shell.
-
-        self.logger.debug("Start Picture preview")
 
 
     def _stop_picture_preview_process(self):
 
         # Send the signal to all the process groups
-
-        self.videoPreviewSubProcess.stdin.write("quit()".encode())
-
         os.killpg(os.getpgid(self.picturePreviewSubProcess.pid), signal.SIGTERM)
 
-
-        self.logger.debug("Stop Picture preview")
+        self.logger.debug("Stop Picture preview and kill the picturePreviewSubProcess")
 
 
     # local function
     def _video_preview_process(self):
-        #global videoPreviewEvent
         global preview_is_running
         self.logger.debug("enter the function")
 
@@ -317,7 +313,6 @@ class Camera(Thread):
 
         else:
             while preview_is_running:
-                #self.logger.debug("create preview Photo")
 
                 camera_file = gp.check_result(gp.gp_camera_capture_preview(self._camera))
 
@@ -341,10 +336,6 @@ class Camera(Thread):
 
     # local function
     def _stop_video_preview_process(self):
-        global videoPreviewEvent
-
-        #self.logger.debug(": set videoPreviewEvent")
-        #videoPreviewEvent.set()
 
         # Stop Subprocess Preview Stream
         if(devModus):
@@ -355,8 +346,6 @@ class Camera(Thread):
 
 
         self.logger.debug("Stop Camera video preview")
-        #videoPreviewEvent.clear()
-
 
     # public function
     def _capture(self):
@@ -366,11 +355,6 @@ class Camera(Thread):
         global startCapturing
 
         startCapturing = False
-        self.startCapturingEvent.set()
-        self.startCapturingEvent.clear()
-
-
-        #Event().wait(2)
 
         # Subprocess Camera Capturing
         date = time.strftime("%Y-%m-%d-%H-%M-%S")
@@ -387,9 +371,6 @@ class Camera(Thread):
         image = Image.open(io.BytesIO(data_file))
         image.save((imageDirectory + lastCapturedImage))
 
-        #captureCommmand = "gphoto2 --keep --capture-image-and-download --stdout > " + imageDirectory + lastCapturedImage
-
-        #subprocess.Popen(captureCommmand, shell=True, stdout=False, stdin=False).wait()
         captured = True
 
         try:
@@ -757,9 +738,9 @@ def saveImage():
             if(saveOnServer):
                 os.rename(imageDirectory + lastCapturedImage, serverImageDirectory + lastCapturedImage)
 
-            print("Image saved")
+                logging.debug("Image saved on server")
         except:
-            print("Error: Image cant be moved")
+            logging.warning("Error: Image cant be moved")
 
     lastCapturedImage = ""
 
@@ -862,4 +843,4 @@ if __name__ == '__main__':
                 captured = False
 
         else:
-            print("Wrong Input")
+            logging.warning("Wrong Input: %s", button)
