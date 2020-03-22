@@ -231,8 +231,9 @@ class Camera(Thread):
         preview_is_running = True
 
     def stop_all_previews(self):
-        self.logger.debug("clear startPreviewEvent -> it wait")
-        self.startPreviewEvent.clear()
+        global preview_is_running
+        self.logger.debug("set The Variable preview_is_running to false")
+        preview_is_running = False
 
         try:
             self.logger.debug("try _stop_video_preview_process")
@@ -257,9 +258,10 @@ class Camera(Thread):
         self._stop_video_preview_process()
 
 
-    def is_startPreviewEvent_set(self):
-        self.logger.debug("return startPreviewEvent status: %s", self.startPreviewEvent.is_set())
-        return self.startPreviewEvent.is_set()
+    def is_preview_is_running_set(self):
+        global preview_is_running
+        self.logger.debug("return preview_is_running status: %s", preview_is_running)
+        return preview_is_running
 
     def start_captured_preview_process(self):
 
@@ -658,7 +660,7 @@ class Countdown(Thread):
         while True:
             self.countdownEvent.wait()
 
-            if(threads["Camera"].is_startPreviewEvent_set()):
+            if(threads["Camera"].is_preview_is_running_set()):
                 self.countdown(10)
                 #threads["LedRingControl"].start_led_countdown_event()
 
