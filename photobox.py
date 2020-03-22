@@ -95,7 +95,7 @@ import logging
 
 
 # setup Logging
-logging.basicConfig(filename=str(os.path.dirname(os.path.realpath(__file__))) + '/photobox.log', format='%(asctime)s %(lineno)d %(module)s %(funcName)s %(message)s', level=logging.DEBUG)
+logging.basicConfig(filename=str(os.path.dirname(os.path.realpath(__file__))) + '/photobox.log', format='%(asctime)s %(levelname)s l:%(lineno)d %(threadName)s %(funcName)s: %(message)s', level=logging.DEBUG)
 
 
 # boolean for Develop Modus
@@ -231,8 +231,8 @@ class Camera(Thread):
     def start_preview(self):
         global preview_is_running
         self.logger.debug("set the startPreviewEvent and set preview_is_running to True-> it should start")
-        self.startPreviewEvent.set()
         preview_is_running = True
+        self.startPreviewEvent.set()
 
     def stop_all_previews(self):
         global preview_is_running
@@ -270,12 +270,12 @@ class Camera(Thread):
 
         if(lastCapturedImage != noImageCapturedInfo):
 
-            self.logger.warning("Open noImageCapturedInfo in feh")
+            self.logger.debug("Open Captured in feh")
             picturePreviewCommand = "feh -xFY " + imageDirectory + lastCapturedImage
             self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
 
         else:
-            self.logger.debug("Open Captured Image in feh")
+            self.logger.warning("Open noImageCapturedInfo Image in feh")
             picturePreviewCommand = "feh -xFY " + lastCapturedImage
             #self.videoPreviewSubProcess.stdin.write("reload()".encode())
             self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
@@ -385,8 +385,6 @@ class Camera(Thread):
 
             lastCapturedImage = noImageCapturedInfo
 
-
-        # TODO display the captured pciture --
         # start preview Subprocess
         self.start_captured_preview_process()
 
@@ -791,6 +789,7 @@ if __name__ == '__main__':
     # Main Event
     while True:
         button = getButton()
+        logging.info("Button: %s is pressed", button)
         #button = input("Please enter: ")
         screenSaverThread.update_last_interaction()
 
