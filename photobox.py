@@ -679,7 +679,8 @@ class Countdown(Thread):
                 if (i == 2):
                     # Der Boolean wird auf True gesetzt es wird auf das wait vom Preview stream Subprocess gewartet
                     #threads["Camera"].start_capturing()
-                    helper_start_Capturing()
+                    #helper_start_Capturing()
+                    helper_stop_Preview_Video
                     counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 4 -t 2000 ' + path[0] + "/Files/smilePictures/pleaseSmile.png"
 
                     subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE)
