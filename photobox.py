@@ -342,8 +342,8 @@ class Camera(Thread):
     def _stop_video_preview_process(self):
         global videoPreviewEvent
 
-        self.logger.debug(": set videoPreviewEvent")
-        videoPreviewEvent.set()
+        #self.logger.debug(": set videoPreviewEvent")
+        #videoPreviewEvent.set()
 
         # Stop Subprocess Preview Stream
         if(devModus):
@@ -354,7 +354,7 @@ class Camera(Thread):
 
 
         self.logger.debug("Stop Camera video preview")
-        videoPreviewEvent.clear()
+        #videoPreviewEvent.clear()
 
 
     # public function
