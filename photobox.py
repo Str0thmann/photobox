@@ -835,10 +835,14 @@ if __name__ == '__main__':
 
                 captured = False
 
+                cameraThread.start_preview()
+
                 # Start countdown
                 countdownThread.start_countdown()
                 capturedEvent.wait()
                 capturedEvent.clear()
+
+
 
 
         elif(button == "a"):
@@ -847,7 +851,10 @@ if __name__ == '__main__':
                 cameraThread.stop_all_previews()
 
                 deleteImage()
+
                 captured = False
+
+                cameraThread.start_preview()
 
         else:
             logging.warning("Wrong Input: %s", button)
