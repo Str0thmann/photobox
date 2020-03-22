@@ -160,7 +160,7 @@ class Camera(Thread):
     global capturedEvent
     #global videoPreviewEvent
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__ + ".Camera")
 
     startPreviewEvent = Event()
 
@@ -225,8 +225,10 @@ class Camera(Thread):
 
 
     def start_preview(self):
-        self.logger.debug("set startPreviewEvent -> it start")
+        global preview_is_running
+        self.logger.debug("set the startPreviewEvent and set preview_is_running to True-> it shouldstart")
         self.startPreviewEvent.set()
+        preview_is_running = True
 
     def stop_all_previews(self):
         self.logger.debug("clear startPreviewEvent -> it wait")
