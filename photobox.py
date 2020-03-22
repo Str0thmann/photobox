@@ -812,7 +812,7 @@ if __name__ == '__main__':
         elif(button == "c"):
             if(captured):
                 # Close the previewPictureProcess
-                cameraThread.stop_all_previews()
+                cameraThread._stop_picture_preview_process()
 
                 # Save Image
                 saveImage()
