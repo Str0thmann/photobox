@@ -95,7 +95,7 @@ import logging
 
 
 # setup Logging
-logging.basicConfig(filename=str(os.path.dirname(os.path.realpath(__file__))) + '/photobox.log', format='%(asctime)s %(levelname)s l:%(lineno)d %(threadName)s %(funcName)s: %(message)s', level=logging.DEBUG)
+logging.basicConfig(filename=str(os.path.dirname(os.path.realpath(__file__))) + '/photobox.log', format='%(asctime)s %(levelname)s\tl:%(lineno)d %(threadName)s %(funcName)s: %(message)s', level=logging.DEBUG)
 
 
 # boolean for Develop Modus
@@ -362,24 +362,32 @@ class Camera(Thread):
         lastCapturedImage = date + "." + imageFileType
         self.logger.debug("Save the new Image in %s", imageDirectory + lastCapturedImage)
 
-        camera_file = gp.check_result(gp.gp_camera_capture(self._camera, gp.GP_CAPTURE_IMAGE))
-
-        data_file = gp.check_result(gp.gp_camera_file_get(self._camera, camera_file.folder, camera_file.name, gp.GP_FILE_TYPE_NORMAL))
-
-        data_file = gp.check_result(gp.gp_file_get_data_and_size(data_file))
-
-        image = Image.open(io.BytesIO(data_file))
-        image.save((imageDirectory + lastCapturedImage))
-
-        captured = True
-
         try:
+
+            camera_file = gp.check_result(gp.gp_camera_capture(self._camera, gp.GP_CAPTURE_IMAGE))
+
+            data_file = gp.check_result(gp.gp_camera_file_get(self._camera, camera_file.folder, camera_file.name, gp.GP_FILE_TYPE_NORMAL))
+
+            data_file = gp.check_result(gp.gp_file_get_data_and_size(data_file))
+
+            image = Image.open(io.BytesIO(data_file))
+            image.save((imageDirectory + lastCapturedImage))
+
+            captured = True
 
             checkImg = Image.open(imageDirectory + lastCapturedImage)
             self.logger.debug("Image captured and saved correctly")
             image.save("tmp.jpg")
 
+        except gp.GPhoto2Error as gpe:
+            self.logger.warning("Error no picture could be maked, reason GPhoto2Error: %s", gpe)
+
+            lastCapturedImage = noImageCapturedInfo
+
+
         except Exception as e:
+            self.logger.warning("Error no picture could be maked, reason unkown: %s", e)
+
             self.logger.debug("Image cant captured or saved: %s", e)
             os.remove(imageDirectory + lastCapturedImage)
 
@@ -811,7 +819,7 @@ if __name__ == '__main__':
             else:
                 # Start countdown
                 countdownThread.start_countdown()
-                capturedEvent.wait()
+                capturedEvent.wait(20)
                 capturedEvent.clear()
 
 
@@ -825,11 +833,9 @@ if __name__ == '__main__':
 
                 captured = False
 
-                Event().wait(1)
-
                 # Start countdown
                 countdownThread.start_countdown()
-                capturedEvent.wait()
+                capturedEvent.wait(20)
                 capturedEvent.clear()
 
 
