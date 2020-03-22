@@ -278,7 +278,6 @@ class Camera(Thread):
         else:
             self.logger.warning("Open noImageCapturedInfo Image in feh")
             picturePreviewCommand = "feh -xFY " + lastCapturedImage
-            #self.videoPreviewSubProcess.stdin.write("reload()".encode())
             self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
 
         # The os.setsid() is passed in the argument preexec_fn so
@@ -315,24 +314,32 @@ class Camera(Thread):
         else:
             while preview_is_running:
 
-                camera_file = gp.check_result(gp.gp_camera_capture_preview(self._camera))
+                try:
 
-                data_file = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
+                    camera_file = gp.check_result(gp.gp_camera_capture_preview(self._camera))
 
-                image = Image.open(io.BytesIO(data_file))
-                image.save("tmp.jpg")
+                    data_file = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
+
+                    image = Image.open(io.BytesIO(data_file))
+                    image.save("tmp.jpg")
 
 
-                if first:
-                    try:
-                        videoPreviewCommand = "pqiv --actions-from-stdin -fit tmp.jpg"
-                        self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid,
-                                                                    stdin=subprocess.PIPE)
-                        first = False
-                    except Exception as e:
-                        self.logger.warning("Cannot start pqiv: %s ", e)
-                else:
-                    self.videoPreviewSubProcess.stdin.write("reload()".encode())
+                    if first:
+                        try:
+                            videoPreviewCommand = "pqiv --actions-from-stdin -fit tmp.jpg"
+                            self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid,
+                                                                        stdin=subprocess.PIPE)
+                            first = False
+                        except Exception as e:
+                            self.logger.warning("Cannot start pqiv: %s ", e)
+                    else:
+                        self.videoPreviewSubProcess.stdin.write("reload()".encode())
+
+                except gp.GPhoto2Error as gpe:
+                    self.logger.warning("Error no picture could be maked, reason GPhoto2Error: %s", gpe)
+
+                except Exception as e:
+                    self.logger.warning("Error no picture could be maked, reason unkown: %s", e)
 
 
                 time.sleep(0.05)
