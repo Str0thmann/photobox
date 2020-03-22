@@ -160,7 +160,7 @@ class Camera(Thread):
     global capturedEvent
     #global videoPreviewEvent
 
-    logger = logging.getLogger(__name__ + ".Camera")
+    logger = logging.getLogger("Camera: ")
 
     startPreviewEvent = Event()
 
@@ -695,6 +695,8 @@ class Countdown(Thread):
 
             except Exception as e:
                 self.logger.debug("Error programm pngview or counter file not found: %s", e)
+                self.logger.debug("Error happend by i: %s", i)
+
 
 
 def helper_stop_Preview_Video():
