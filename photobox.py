@@ -365,6 +365,9 @@ class Camera(Thread):
         lastCapturedImage = date + "." + imageFileType
         self.logger.debug("Save the new Image in %s", imageDirectory + lastCapturedImage)
 
+        # TODO better name
+        captured = True
+
         try:
 
             camera_file = gp.check_result(gp.gp_camera_capture(self._camera, gp.GP_CAPTURE_IMAGE))
@@ -376,7 +379,6 @@ class Camera(Thread):
             image = Image.open(io.BytesIO(data_file))
             image.save((imageDirectory + lastCapturedImage))
 
-            captured = True
 
             checkImg = Image.open(imageDirectory + lastCapturedImage)
             self.logger.debug("Image captured and saved correctly")
