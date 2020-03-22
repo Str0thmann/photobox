@@ -323,10 +323,13 @@ class Camera(Thread):
 
 
                 if first:
-                    videoPreviewCommand = "pqiv --actions-from-stdin -fit tmp.jpg"
-                    self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid,
-                                                                stdin=subprocess.PIPE)
-                    first = False
+                    try:
+                        videoPreviewCommand = "pqiv --actions-from-stdin -fit tmp.jpg"
+                        self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid,
+                                                                    stdin=subprocess.PIPE)
+                        first = False
+                    except Exception as e:
+                        self.logger.warning("Cannot start pqiv: %s ", e)
                 else:
                     self.videoPreviewSubProcess.stdin.write("reload()".encode())
 
