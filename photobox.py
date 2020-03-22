@@ -350,6 +350,8 @@ class Camera(Thread):
             os.killpg(os.getpgid(self.videoPreviewSubProcess.pid), signal.SIGTERM)
         else:
             self.videoPreviewSubProcess.stdin.write("quit()".encode())
+            os.killpg(os.getpgid(self.videoPreviewSubProcess.pid), signal.SIGTERM)
+
 
         self.logger.debug("Stop Camera video preview")
         videoPreviewEvent.clear()
@@ -370,7 +372,7 @@ class Camera(Thread):
         date = time.strftime("%Y-%m-%d-%H-%M-%S")
         # fileName = date + str(hashedName) + imageFileType
         lastCapturedImage = date + "." + imageFileType
-        self.logger.debug("Save the new Image in %s", lastCapturedImage)
+        self.logger.debug("Save the new Image in %s", imageDirectory + lastCapturedImage)
 
         camera_file = gp.check_result(gp.gp_camera_capture(self._camera, gp.GP_CAPTURE_IMAGE))
 
@@ -691,8 +693,8 @@ class Countdown(Thread):
 
                     subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE).wait()
 
-            except:
-                self.logger.debug("Error programm pngview or counter file not found")
+            except Exception as e:
+                self.logger.debug("Error programm pngview or counter file not found: %s", e)
 
 
 def helper_stop_Preview_Video():
