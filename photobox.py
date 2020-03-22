@@ -809,24 +809,26 @@ if __name__ == '__main__':
         elif(button == "c"):
             if(captured):
                 # Close the previewPictureProcess
-                cameraThread._stop_picture_preview_process()
+                cameraThread.stop_all_previews()
 
                 # Save Image
                 saveImage()
 
                 captured = False
 
+                cameraThread.start_preview()
+
             else:
                 # Start countdown
                 countdownThread.start_countdown()
-                capturedEvent.wait(20)
+                capturedEvent.wait()
                 capturedEvent.clear()
 
 
         elif(button == "r"):
             if(captured):
                 # Close the previewPictureProcess
-                cameraThread._stop_picture_preview_process()
+                cameraThread.stop_all_previews()
 
                 # Save Image
                 saveImage()
@@ -835,14 +837,14 @@ if __name__ == '__main__':
 
                 # Start countdown
                 countdownThread.start_countdown()
-                capturedEvent.wait(20)
+                capturedEvent.wait()
                 capturedEvent.clear()
 
 
         elif(button == "a"):
             if(captured):
                 # Close the previewPictureProcess
-                cameraThread._stop_picture_preview_process()
+                cameraThread.stop_all_previews()
 
                 deleteImage()
                 captured = False
