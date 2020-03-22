@@ -267,6 +267,7 @@ class Camera(Thread):
     def start_captured_preview_process(self):
 
         self.logger.debug("Start Picture preview")
+        Event().wait(0.5)
 
         if(lastCapturedImage != noImageCapturedInfo):
 
