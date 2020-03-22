@@ -163,6 +163,7 @@ class Camera(Thread):
     logger = logging.getLogger("Camera: ")
 
     startPreviewEvent = Event()
+    startCapturingEvent = Event()
 
     finishCaptureEvent = Event()
 
@@ -200,7 +201,7 @@ class Camera(Thread):
 
 
     def run(self):
-        global videoPreviewEvent
+        global startCapturingEvent
         global startCapturing
 
         while True:
@@ -213,8 +214,11 @@ class Camera(Thread):
 
 
             if(startCapturing):
+                self.logger.debug("wait for startCapturingEvent")
+                self.startCapturingEvent.wait()
+
                 self.logger.debug("start capturing")
-                self.capture()
+                self._capture()
 
                 # Das Event brauchen wir vllt nicht wenn wir die wait Funktion des Subprocess nutzen
                 #self.finishCaptureEvent.wait()
@@ -251,11 +255,8 @@ class Camera(Thread):
 
     def start_capturing(self):
 
-        self.logger.debug("set startCapturing true -> it start")
-        self.startCapturing = True
-
-        self.logger.debug("execute _stop_video_preview_process function")
-        self._stop_video_preview_process()
+        self.logger.debug("set startCapturingEvent -> it should start")
+        self.startCapturingEvent.set()
 
 
     def is_preview_is_running_set(self):
@@ -358,13 +359,16 @@ class Camera(Thread):
 
 
     # public function
-    def capture(self):
+    def _capture(self):
         global captured
         global lastCapturedImage
         global capturedEvent
         global startCapturing
 
         startCapturing = False
+        self.startCapturingEvent.set()
+        self.startCapturingEvent.clear()
+
 
         #Event().wait(2)
 
@@ -713,12 +717,13 @@ def helper_start_Capturing():
     global startCapturing
     global threads
 
+    # Should in the Camera Class
     logging.debug(": start the Capturing with global variable: startCapturing set to True")
     startCapturing = True
 
     helper_stop_Preview_Video()
 
-    threads["Camera"].capture()
+    threads["Camera"].start_capturing()
 
 
 def getButton():
