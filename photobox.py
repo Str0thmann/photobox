@@ -135,6 +135,9 @@ capturedEvent = Event()
 # Subprocess preview
 videoPreviewEvent = Event()
 
+preview_is_running = False
+startCapturing = False
+
 # Subprocess preview
 videoPreviewSubProcess = False
 
@@ -145,7 +148,7 @@ ORDER = neopixel.GRB
 
 def exit_handler():
     print('My application is ending!')
-    threads["Camera"].stop_preview()
+    threads["Camera"].stop_all_previews()
     threads["Camera"].close_all()
     threads["ScreenSaver"].stop_screen_saver()
     threads["LedRingControl"].turn_off_all()
@@ -171,7 +174,7 @@ class Camera(Thread):
         self.logger.info("name the Thread: Camera")
 
 
-        self.startCapturing = False
+        #self.startCapturing = False
 
         # Kill all gphoto2 processe
 
@@ -198,18 +201,18 @@ class Camera(Thread):
 
     def run(self):
         global videoPreviewEvent
+        global startCapturing
+
         while True:
             self.logger.debug("wait for startPreviewEvent")
             self.startPreviewEvent.wait()
 
             # preview
-            self._start_video_preview_process()
+            self.logger.debug("execute _video_preview_process")
+            self._video_preview_process()
 
-            # wait for subProcess Camera Stream closed
-            self.logger.debug("wait for videoPreviewSubProcess")
-            videoPreviewEvent.wait()
 
-            if(self.startCapturing):
+            if(startCapturing):
                 self.logger.debug("start capturing")
                 self.capture()
 
@@ -225,7 +228,7 @@ class Camera(Thread):
         self.logger.debug("set startPreviewEvent -> it start")
         self.startPreviewEvent.set()
 
-    def stop_preview(self):
+    def stop_all_previews(self):
         self.logger.debug("clear startPreviewEvent -> it wait")
         self.startPreviewEvent.clear()
 
@@ -264,8 +267,10 @@ class Camera(Thread):
             self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
 
         else:
-            #picturePreviewCommand = "feh -xFY " + lastCapturedImage
-            self.videoPreviewSubProcess.stdin.write("reload()".encode())
+            picturePreviewCommand = "feh -xFY " + lastCapturedImage
+            #self.videoPreviewSubProcess.stdin.write("reload()".encode())
+            self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
+
 
         # The os.setsid() is passed in the argument preexec_fn so
         # it's run after the fork() and before  exec() to run the shell.
@@ -286,23 +291,27 @@ class Camera(Thread):
 
 
     # local function
-    def _start_video_preview_process(self):
-        global videoPreviewEvent
+    def _video_preview_process(self):
+        #global videoPreviewEvent
+        global preview_is_running
         self.logger.debug("enter the function")
+
+        self.logger.debug("clear the startPreviewEvent")
+        self.startPreviewEvent.clear()
 
         # Subprocess Preview Stream
         first = True
 
 
         self.logger.debug("Start Camera preview")
-        self.logger.debug("videoPreviewEvent: %s", videoPreviewEvent.is_set())
+        self.logger.debug("preview_is_running: %s", preview_is_running)
 
         if(devModus):
             videoPreviewCommand = "feh '" + imageDirectory + "pre.jpg'"
             self.videoPreviewSubProcess = subprocess.Popen(videoPreviewCommand, shell=True, preexec_fn=os.setsid)
 
         else:
-            while not videoPreviewEvent.is_set():
+            while preview_is_running:
                 #self.logger.debug("create preview Photo")
 
                 camera_file = gp.check_result(gp.gp_camera_capture_preview(self._camera))
@@ -324,14 +333,13 @@ class Camera(Thread):
 
                 time.sleep(0.05)
 
-        self.logger.debug("set videoPreviewEvent")
-        videoPreviewEvent.set()
 
     # local function
     def _stop_video_preview_process(self):
         global videoPreviewEvent
 
-        videoPreviewEvent.clear()
+        self.logger.debug(": set videoPreviewEvent")
+        videoPreviewEvent.set()
 
         # Stop Subprocess Preview Stream
         if(devModus):
@@ -340,15 +348,17 @@ class Camera(Thread):
             self.videoPreviewSubProcess.stdin.write("quit()".encode())
 
         self.logger.debug("Stop Camera video preview")
+        videoPreviewEvent.clear()
 
 
-    # local function
+    # public function
     def capture(self):
         global captured
         global lastCapturedImage
         global capturedEvent
+        global startCapturing
 
-        self.startCapturing = False
+        startCapturing = False
 
         #Event().wait(2)
 
@@ -356,6 +366,7 @@ class Camera(Thread):
         date = time.strftime("%Y-%m-%d-%H-%M-%S")
         # fileName = date + str(hashedName) + imageFileType
         lastCapturedImage = date + "." + imageFileType
+        self.logger.debug("Save the new Image in %s", lastCapturedImage)
 
         camera_file = gp.check_result(gp.gp_camera_capture(self._camera, gp.GP_CAPTURE_IMAGE))
 
@@ -366,7 +377,6 @@ class Camera(Thread):
         image = Image.open(io.BytesIO(data_file))
         image.save((imageDirectory + lastCapturedImage))
 
-
         #captureCommmand = "gphoto2 --keep --capture-image-and-download --stdout > " + imageDirectory + lastCapturedImage
 
         #subprocess.Popen(captureCommmand, shell=True, stdout=False, stdin=False).wait()
@@ -375,16 +385,17 @@ class Camera(Thread):
         try:
 
             checkImg = Image.open(imageDirectory + lastCapturedImage)
-            self.logger.debug("Image captured correctly")
+            self.logger.debug("Image captured and saved correctly")
             image.save("tmp.jpg")
 
         except Exception as e:
-            self.logger.debug("Image cant captured: %s", e)
+            self.logger.debug("Image cant captured or saved: %s", e)
             os.remove(imageDirectory + lastCapturedImage)
 
             lastCapturedImage = noImageCapturedInfo
 
 
+        # TODO display the captured pciture --
         # start preview Subprocess
         self.start_captured_preview_process()
 
@@ -393,6 +404,8 @@ class Camera(Thread):
 
     def close_all(self):
         self._camera.exit()
+
+
 
 class ScreenSaver(Thread):
     global threads
@@ -431,7 +444,7 @@ class ScreenSaver(Thread):
 
         captured = False
 
-        threads['Camera'].stop_preview()
+        threads['Camera'].stop_all_previews()
 
     def stop_screen_saver(self):
         self.startScreenSaverEvent.clear()
@@ -632,6 +645,7 @@ class LedRingControl(Thread):
 class Countdown(Thread):
     global threads
     countdownEvent = Event()
+    logger = logging.getLogger(__name__)
 
     def __init__(self):
         Thread.__init__(self)
@@ -644,7 +658,7 @@ class Countdown(Thread):
 
             if(threads["Camera"].is_startPreviewEvent_set()):
                 self.countdown(10)
-                threads["LedRingControl"].start_led_countdown_event()
+                #threads["LedRingControl"].start_led_countdown_event()
 
     def start_countdown(self):
         self.countdownEvent.set()
@@ -658,13 +672,15 @@ class Countdown(Thread):
             try:
                 if (i == 2):
                     # Der Boolean wird auf True gesetzt es wird auf das wait vom Preview stream Subprocess gewartet
-                    threads["Camera"].start_capturing()
+                    #threads["Camera"].start_capturing()
+                    helper_start_Capturing()
                     counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 4 -t 2000 ' + path[0] + "/Files/smilePictures/pleaseSmile.png"
 
                     subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE)
 
                 if(devModus):
-                    print("Picture: " + str(i))
+                    
+                    self.logger.debug("Picture: " + str(i))
                     Event().wait(1)
                 else:
                     counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 ' + path[0] + "/Files/counterPictures/counterWhite/" + str(i) + '.png'
@@ -672,8 +688,28 @@ class Countdown(Thread):
                     subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE).wait()
 
             except:
-                print("Error programm pngview or counter file not found")
+                self.logger.debug("Error programm pngview or counter file not found")
 
+
+def helper_stop_Preview_Video():
+    global preview_is_running
+    global threads
+    
+    logging.debug(": stop the Preview Video with global variable: preview_is_running set to False")
+    preview_is_running = False
+
+    threads["Camera"]._stop_video_preview_process()
+
+def helper_start_Capturing():
+    global startCapturing
+    global threads
+
+    logging.debug(": start the Capturing with global variable: startCapturing set to True")
+    startCapturing = True
+
+    helper_stop_Preview_Video()
+
+    threads["Camera"].capture()
 
 
 def getButton():
