@@ -829,6 +829,8 @@ if __name__ == '__main__':
 
                 captured = False
 
+                Event().wait(0.5)
+
                 # TODO did not start every time, why???
                 cameraThread.start_preview()
 
