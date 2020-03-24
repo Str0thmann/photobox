@@ -193,18 +193,13 @@ class Camera(Thread):
 
         try:
             gp.check_result(gp.gp_camera_init(self._camera, self._context))
-            self._camera_initialized = True
             self.logger.debug("Succefully open/initialize a connection to the Camera")
         except gp.GPhoto2Error as gpe:
             self.logger.warning("GPhoto2Error Error: trying to open the connection to the Camera: %s", gpe)
         except Exception as e:
             self.logger.warning("Unkown Error: trying to open the connection to the Camera: %s", e)
 
-        #self._context_config = gp.check_result(gp.gp_camera_init(self._camera, self._context))
 
-        #self.logger.info("Camera initialized")
-
-        #self._camera.init(self._context)
 
         self.logger.debug('Camera summary: %s', str(self._camera.get_summary(self._context)))
 
@@ -318,11 +313,6 @@ class Camera(Thread):
         # Subprocess Preview Stream
         first = True
 
-        #if not self._camera_initialized:
-
-            #self._open_connection_to_camera()
-
-
         self.logger.debug("Start Camera preview")
         self.logger.debug("preview_is_running: %s", preview_is_running)
 
@@ -431,22 +421,10 @@ class Camera(Thread):
 
         capturedEvent.set()
 
-    def _open_connection_to_camera(self):
-        self.logger.debug("Want to open/initialize a connection to the Camera")
-        try:
-            gp.check_result(gp.gp_camera_init(self._camera, self._context))
-            self._camera_initialized = True
-            self.logger.debug("Succefully open/initialize a connection to the Camera")
-        except gp.GPhoto2Error as gpe:
-            self.logger.warning("GPhoto2Error Error: trying to open the connection to the Camera: %s", gpe)
-        except Exception as e:
-            self.logger.warning("Unkown Error: trying to open the connection to the Camera: %s", e)
-
     def _close_connection_to_camera(self):
         self.logger.debug("Want to close/exit the connection to the Camera")
         try:
             gp.check_result(gp.gp_camera_exit(self._camera, self._context))
-            self._camera_initialized = False
             self.logger.debug("Succefully close/exit the connection to the Camera")
         except gp.GPhoto2Error as gpe:
             self.logger.warning("GPhoto2Error Error: trying to close the connection to the Camera: %s", gpe)
@@ -868,7 +846,7 @@ if __name__ == '__main__':
 
                 captured = False
 
-                Event().wait(0.5)
+                #Event().wait(0.5)
 
                 # TODO did not start every time, why???
                 cameraThread.start_preview()
@@ -883,7 +861,7 @@ if __name__ == '__main__':
         elif(button == "r"):
             if(captured):
                 # Close the previewPictureProcess
-                cameraThread.stop_all_previews()
+                cameraThread._stop_picture_preview_process()
 
                 # Save Image
                 saveImage()
@@ -903,7 +881,7 @@ if __name__ == '__main__':
         elif(button == "a"):
             if(captured):
                 # Close the previewPictureProcess
-                cameraThread.stop_all_previews()
+                cameraThread._stop_picture_preview_process()
 
                 deleteImage()
 
