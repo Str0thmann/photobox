@@ -149,7 +149,6 @@ ORDER = neopixel.GRB
 def exit_handler():
     print('My application is ending!')
     threads["Camera"].stop_all_previews()
-    threads["Camera"].close_all()
     threads["ScreenSaver"].stop_screen_saver()
     threads["LedRingControl"].turn_off_all()
     logging.info("photobox is closing")
@@ -188,9 +187,9 @@ class Camera(Thread):
 
         self._camera = gp.Camera()
         self._context = gp.gp_context_new()
-        self._context_config = gp.check_result(gp.gp_camera_init(self._camera, self._context))
+        #self._context_config = gp.check_result(gp.gp_camera_init(self._camera, self._context))
 
-        self.logger.info("Camera initialized")
+        #self.logger.info("Camera initialized")
 
         #self._camera.init(self._context)
 
@@ -253,6 +252,9 @@ class Camera(Thread):
             self.logger.warning('error in _stop_picture_preview_process, i dont know what happend: %s', e)
             pass
 
+        self._close_connection_to_camera()
+
+
     def start_capturing(self):
 
         self.logger.debug("set startCapturingEvent -> it should start")
@@ -303,6 +305,8 @@ class Camera(Thread):
         # Subprocess Preview Stream
         first = True
 
+        self._open_connection_to_camera()
+
 
         self.logger.debug("Start Camera preview")
         self.logger.debug("preview_is_running: %s", preview_is_running)
@@ -347,6 +351,7 @@ class Camera(Thread):
 
     # local function
     def _stop_video_preview_process(self):
+
 
         # Stop Subprocess Preview Stream
         if(devModus):
@@ -411,9 +416,24 @@ class Camera(Thread):
 
         capturedEvent.set()
 
+    def _open_connection_to_camera(self):
+        self.logger.debug("Want to open/initialize a connection to the Camera")
+        try:
+            gp.check_result(gp.gp_camera_init(self._camera, self._context))
+        except gp.GPhoto2Error as gpe:
+            self.logger.warning("GPhoto2Error Error: trying to open the connection to the Camera: %s", gpe)
+        except Exception as e:
+            self.logger.warning("Unkown Error: trying to open the connection to the Camera: %s", e)
 
-    def close_all(self):
-        self._camera.exit()
+    def _close_connection_to_camera(self):
+        self.logger.debug("Want to close/exit the connection to the Camera")
+        try:
+            gp.check_result(gp.gp_camera_exit(self._camera, self._context))
+        except gp.GPhoto2Error as gpe:
+            self.logger.warning("GPhoto2Error Error: trying to close the connection to the Camera: %s", gpe)
+        except Exception as e:
+            self.logger.warning("Unkown Error: trying to close the connection to the Camera: %s", e)
+
 
 
 
