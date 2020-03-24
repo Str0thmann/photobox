@@ -188,22 +188,12 @@ class Camera(Thread):
         self._camera = gp.Camera()
         self._context = gp.gp_context_new()
 
-        try:
-            self.logger.debug(gp.check_result(gp.gp_camera_get_about(self._camera, self._context)))
-            self.logger.debug(gp.check_result(gp.gp_camera_get_summary(self._camera, self._context)))
-            self.logger.debug(gp.check_result(gp.gp_camera_get_abilities(self._camera)))
-            self.logger.debug("Succefully get infos about the Camera")
-
-        except gp.GPhoto2Error as gpe:
-            self.logger.warning("GPhoto2Error Error: trying to get infos about the Camera: %s", gpe)
-        except Exception as e:
-            self.logger.warning("Unkown Error: trying to get infos about the Camera: %s", e)
-
 
         self.logger.debug("Want to open/initialize a connection to the Camera")
 
         try:
             gp.check_result(gp.gp_camera_init(self._camera, self._context))
+            self._camera_initialized = True
             self.logger.debug("Succefully open/initialize a connection to the Camera")
         except gp.GPhoto2Error as gpe:
             self.logger.warning("GPhoto2Error Error: trying to open the connection to the Camera: %s", gpe)
@@ -328,7 +318,9 @@ class Camera(Thread):
         # Subprocess Preview Stream
         first = True
 
-        #self._open_connection_to_camera()
+        if not self._camera_initialized:
+
+            self._open_connection_to_camera()
 
 
         self.logger.debug("Start Camera preview")
@@ -443,6 +435,7 @@ class Camera(Thread):
         self.logger.debug("Want to open/initialize a connection to the Camera")
         try:
             gp.check_result(gp.gp_camera_init(self._camera, self._context))
+            self._camera_initialized = True
             self.logger.debug("Succefully open/initialize a connection to the Camera")
         except gp.GPhoto2Error as gpe:
             self.logger.warning("GPhoto2Error Error: trying to open the connection to the Camera: %s", gpe)
@@ -453,6 +446,7 @@ class Camera(Thread):
         self.logger.debug("Want to close/exit the connection to the Camera")
         try:
             gp.check_result(gp.gp_camera_exit(self._camera, self._context))
+            self._camera_initialized = False
             self.logger.debug("Succefully close/exit the connection to the Camera")
         except gp.GPhoto2Error as gpe:
             self.logger.warning("GPhoto2Error Error: trying to close the connection to the Camera: %s", gpe)
