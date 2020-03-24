@@ -192,7 +192,7 @@ class Camera(Thread):
         self.logger.debug("Want to open/initialize a connection to the Camera")
 
         try:
-            self._context_config =  gp.check_result(gp.gp_camera_init(self._camera, self._context))
+            gp.check_result(gp.gp_camera_init(self._camera, self._context))
         except gp.GPhoto2Error as gpe:
             self.logger.warning("GPhoto2Error Error: trying to open the connection to the Camera: %s", gpe)
         except Exception as e:
@@ -316,7 +316,7 @@ class Camera(Thread):
         # Subprocess Preview Stream
         first = True
 
-        self._open_connection_to_camera()
+        #self._open_connection_to_camera()
 
 
         self.logger.debug("Start Camera preview")
