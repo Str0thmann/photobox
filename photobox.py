@@ -190,6 +190,10 @@ class Camera(Thread):
 
         try:
             gp.check_result(gp.gp_camera_get_about(self._camera, self._context))
+            gp.check_result(gp.gp_camera_get_summary(self._camera, self._context))
+            gp.check_result(gp.gp(self._camera, self._context))
+            self.logger.debug("Succefully get infos about the Camera")
+
         except gp.GPhoto2Error as gpe:
             self.logger.warning("GPhoto2Error Error: trying to get infos about the Camera: %s", gpe)
         except Exception as e:
@@ -200,6 +204,7 @@ class Camera(Thread):
 
         try:
             gp.check_result(gp.gp_camera_init(self._camera, self._context))
+            self.logger.debug("Succefully open/initialize a connection to the Camera")
         except gp.GPhoto2Error as gpe:
             self.logger.warning("GPhoto2Error Error: trying to open the connection to the Camera: %s", gpe)
         except Exception as e:
