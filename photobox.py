@@ -438,6 +438,7 @@ class Camera(Thread):
         self.logger.debug("Want to open/initialize a connection to the Camera")
         try:
             gp.check_result(gp.gp_camera_init(self._camera, self._context))
+            self.logger.debug("Succefully open/initialize a connection to the Camera")
         except gp.GPhoto2Error as gpe:
             self.logger.warning("GPhoto2Error Error: trying to open the connection to the Camera: %s", gpe)
         except Exception as e:
@@ -447,6 +448,7 @@ class Camera(Thread):
         self.logger.debug("Want to close/exit the connection to the Camera")
         try:
             gp.check_result(gp.gp_camera_exit(self._camera, self._context))
+            self.logger.debug("Succefully close/exit the connection to the Camera")
         except gp.GPhoto2Error as gpe:
             self.logger.warning("GPhoto2Error Error: trying to close the connection to the Camera: %s", gpe)
         except Exception as e:
