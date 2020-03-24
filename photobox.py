@@ -189,9 +189,9 @@ class Camera(Thread):
         self._context = gp.gp_context_new()
 
         try:
-            gp.check_result(gp.gp_camera_get_about(self._camera, self._context))
-            gp.check_result(gp.gp_camera_get_summary(self._camera, self._context))
-            gp.check_result(gp.gp_camera_get_abilities(self._camera, self._context))
+            self.logger.debug(gp.check_result(gp.gp_camera_get_about(self._camera, self._context)))
+            self.logger.debug(gp.check_result(gp.gp_camera_get_summary(self._camera, self._context)))
+            self.logger.debug(gp.check_result(gp.gp_camera_get_abilities(self._camera)))
             self.logger.debug("Succefully get infos about the Camera")
 
         except gp.GPhoto2Error as gpe:
