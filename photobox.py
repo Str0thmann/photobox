@@ -187,6 +187,17 @@ class Camera(Thread):
 
         self._camera = gp.Camera()
         self._context = gp.gp_context_new()
+
+
+        self.logger.debug("Want to open/initialize a connection to the Camera")
+
+        try:
+            gp.check_result(gp.gp_camera_init(self._camera, self._context))
+        except gp.GPhoto2Error as gpe:
+            self.logger.warning("GPhoto2Error Error: trying to open the connection to the Camera: %s", gpe)
+        except Exception as e:
+            self.logger.warning("Unkown Error: trying to open the connection to the Camera: %s", e)
+
         #self._context_config = gp.check_result(gp.gp_camera_init(self._camera, self._context))
 
         #self.logger.info("Camera initialized")
