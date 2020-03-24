@@ -318,9 +318,9 @@ class Camera(Thread):
         # Subprocess Preview Stream
         first = True
 
-        if not self._camera_initialized:
+        #if not self._camera_initialized:
 
-            self._open_connection_to_camera()
+            #self._open_connection_to_camera()
 
 
         self.logger.debug("Start Camera preview")
