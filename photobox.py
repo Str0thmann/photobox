@@ -277,18 +277,21 @@ class Camera(Thread):
     def start_captured_preview_process(self):
 
         self.logger.debug("Start Picture preview")
-        Event().wait(0.5)
+        #Event().wait(0.5)
 
-        if(lastCapturedImage != noImageCapturedInfo):
+        if len(lastCapturedImage) > 0:
+            if(lastCapturedImage != noImageCapturedInfo):
 
-            self.logger.debug("Open Captured in feh")
-            picturePreviewCommand = "feh -xFY " + imageDirectory + lastCapturedImage
-            self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
+                self.logger.debug("Open Captured in feh")
+                picturePreviewCommand = "feh -xFY " + imageDirectory + lastCapturedImage
+                self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
 
+            else:
+                self.logger.warning("Open noImageCapturedInfo Image in feh")
+                picturePreviewCommand = "feh -xFY " + lastCapturedImage
+                self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
         else:
-            self.logger.warning("Open noImageCapturedInfo Image in feh")
-            picturePreviewCommand = "feh -xFY " + lastCapturedImage
-            self.picturePreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
+            self.logger.debug("Skip Picture preview, because it is removed")
 
         # The os.setsid() is passed in the argument preexec_fn so
         # it's run after the fork() and before  exec() to run the shell.
@@ -787,11 +790,11 @@ def deleteImage():
 
         try:
             os.remove(imageDirectory + lastCapturedImage)
-            print("Image delete")
+            logging.debug("Image delete")
         except:
-            print("Error: Image cant be delete")
+            logging.warning("Error: Image cant be delete")
 
-        Event().wait(1)
+        Event().wait(0.5)
 
     lastCapturedImage = ""
 
