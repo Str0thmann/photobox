@@ -347,7 +347,7 @@ class Camera(Thread):
                     self.logger.warning("Error no picture could be maked, reason unkown: %s", e)
 
 
-                time.sleep(0.05)
+                time.sleep(0.01)
 
 
     # local function
