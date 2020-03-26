@@ -73,7 +73,7 @@
     TODO pngview check implement
 '''
 
-from threading import Thread, Event, Lock
+from threading import Thread, Event, Barrier
 import time
 import subprocess
 import os
@@ -139,6 +139,11 @@ startCapturing = False
 # Subprocess preview
 videoPreviewSubProcess = False
 
+# TODO correct implementation
+# This is a Barrier for aktual 2 Parties, the Coutdown self and the LED Ring
+# with a timeout from 2 sec
+sync_Countdown_Barrier = Barrier(2, timeout=2)
+
 # LED initial
 ledCyclePin = board.D18
 ORDER = neopixel.GRB
@@ -179,6 +184,7 @@ class Camera(Thread):
         subprocess.Popen('killall /usr/lib/gvfs/gvfs-gphoto2-volume-monitor', shell=True, stdout=False, stdin=False).wait()
         subprocess.Popen('killall /usr/lib/gvfs/gvfsd-gphoto2', shell=True, stdout=False, stdin=False).wait()
 
+
         #self.contex = gp.gp_context_new()
         #self.error, self.camera = gp.gp_camera_new()
         #self.error = gp.gp_camera_init(self.camera, self.contex)
@@ -200,9 +206,6 @@ class Camera(Thread):
 
 
         self.logger.debug('Camera summary: %s', str(self._camera.get_summary(self._context)))
-
-
-        #subprocess.Popen('mkfifo fifo.mjpg', shell=True, stdout=False, stdin=subprocess.PIPE).wait()
 
 
     def run(self):
@@ -538,7 +541,12 @@ class LedRingControl(Thread):
     def reset_led_ring(self):
         pass
 
-    def led_ring_function_countdown(self):
+    def led_ring_function_countdown(self, wait_for_barrier=False):
+
+        if wait_for_barrier:
+            global sync_Countdown_Barrier
+            self.logger.debug("Wait on a Barrier for the Countdown Thread to start the coutdown synchron")
+            sync_Countdown_Barrier.wait()
 
         # TODO break condition
         #while(countdown > 0):
@@ -676,8 +684,8 @@ class Countdown(Thread):
             self.countdownEvent.wait()
 
             if(threads["Camera"].is_preview_is_running_set()):
-                self.countdown(10)
-                #threads["LedRingControl"].start_led_countdown_event()
+                self.countdown(10, False)
+                #threads["LedRingControl"].start_led_countdown_event(False)
 
     def start_countdown(self):
         self.countdownEvent.set()
@@ -685,7 +693,12 @@ class Countdown(Thread):
         self.countdownEvent.clear()
 
     # local function
-    def countdown(self, time):
+    def countdown(self, time, wait_for_barrier=False):
+        if wait_for_barrier:
+            global sync_Countdown_Barrier
+            self.logger.debug("Wait on a Barrier for the LED Thread to start the coutdown synchron")
+            sync_Countdown_Barrier.wait()
+
         for i in range(time, 0, -1):
 
             try:
