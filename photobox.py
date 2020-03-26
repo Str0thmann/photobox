@@ -125,11 +125,9 @@ reCaptureButton = Button(17)
 abortButton = Button(22)
 
 # in seconds
-screenSaverStartTime = 120
+screenSaverStartTimer = 120
 
-pictureLocationLock = Lock()
 capturedEvent = Event()
-
 
 
 # Subprocess preview
@@ -428,8 +426,6 @@ class Camera(Thread):
             self.logger.warning("Unkown Error: trying to close the connection to the Camera: %s", e)
 
 
-
-
 class ScreenSaver(Thread):
     global threads
     startScreenSaverEvent = Event()
@@ -448,9 +444,9 @@ class ScreenSaver(Thread):
     def run(self):
 
         while True:
-            self.startScreenSaverEvent.wait(screenSaverStartTime - (time.time() - self.lastInteraction))
+            self.startScreenSaverEvent.wait(screenSaverStartTimer - (time.time() - self.lastInteraction))
 
-            if(time.time() - self.lastInteraction  > screenSaverStartTime):
+            if(time.time() - self.lastInteraction  > screenSaverStartTimer):
                 self.start_screen_saver()
 
             if(self.startScreenSaverEvent.is_set()):
@@ -716,7 +712,6 @@ class Countdown(Thread):
                 self.logger.debug("Error happend by i: %s", i)
 
 
-
 def helper_stop_Preview_Video():
     global preview_is_running
     global threads
@@ -725,6 +720,7 @@ def helper_stop_Preview_Video():
     preview_is_running = False
 
     threads["Camera"]._stop_video_preview_process()
+
 
 def helper_start_Capturing():
     global startCapturing
@@ -762,6 +758,7 @@ def getButton():
 
     return inputCommand
 
+
 def saveImage():
     global lastCapturedImage
     if(lastCapturedImage != noImageCapturedInfo):
@@ -775,6 +772,7 @@ def saveImage():
             logging.warning("Error: Image cant be moved")
 
     lastCapturedImage = ""
+
 
 def deleteImage():
     global lastCapturedImage
@@ -790,6 +788,7 @@ def deleteImage():
         #Event().wait(0.5)
 
     lastCapturedImage = ""
+
 
 if __name__ == '__main__':
 
