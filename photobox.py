@@ -326,9 +326,6 @@ class Camera(Thread):
     def _video_preview_process(self):
         global video_preview_fps
 
-        self.logger.debug("clear the startPreviewEvent")
-        self.startPreviewEvent.clear()
-
         # Subprocess Preview Stream
         first = True
 
@@ -372,8 +369,8 @@ class Camera(Thread):
 
                 time.sleep(1/video_preview_fps)
 
-        self.logger.debug("wait 0.1 sec")
-        Event().wait(0.1)
+        #self.logger.debug("wait 0.1 sec")
+        #Event().wait(0.1)
 
         #self._close_connection_to_camera()
         self.logger.debug("video preview is stopped now")
