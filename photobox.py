@@ -372,8 +372,8 @@ class Camera(Thread):
 
                 time.sleep(1/video_preview_fps)
 
-        #self.logger.debug("wait 1 sec")
-        #Event().wait(1)
+        self.logger.debug("wait 0.1 sec")
+        Event().wait(0.1)
 
         #self._close_connection_to_camera()
         self.logger.debug("video preview is stopped now")
