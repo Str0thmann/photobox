@@ -372,6 +372,9 @@ class Camera(Thread):
 
                 time.sleep(1/video_preview_fps)
 
+        self._close_connection_to_camera()
+        self.logger.debug("leve video preview1")
+
     def _capture(self):
         global captured
         global lastCapturedImage
