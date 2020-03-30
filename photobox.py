@@ -108,7 +108,7 @@ imageDirectory = "/home/pi/Pictures/"
 imageFileType = "jpg"
 lastCapturedImage = ""
 
-noImageCapturedInfo = path[0] + "/" + "Files/keinFotofuerDich2.jpg"
+noImageCapturedInfoWithPath = path[0] + "/" + "Files/keinFotofuerDich2.jpg"
 noImageFound = path[0] + "/" + "Files/noImageFound.jpg"
 
 
@@ -280,15 +280,15 @@ class Camera(Thread):
 
         try:
 
-            if(lastCapturedImage != noImageCapturedInfo):
+            if(lastCapturedImage != noImageCapturedInfoWithPath):
 
                 self.logger.debug("Open Captured in feh")
                 picturePreviewCommand = "feh -xFY " + imageDirectory + lastCapturedImage
                 self.capturedPreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
 
             else:
-                self.logger.warning("Open noImageCapturedInfo Image in feh")
-                picturePreviewCommand = "feh -xFY " + imageDirectory + lastCapturedImage
+                self.logger.warning("Open noImageCapturedInfoWithPath Image in feh")
+                picturePreviewCommand = "feh -xFY " + lastCapturedImage
                 self.capturedPreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
         except Exception as e:
             self.logger.warning("Error occurred, by the try to start the captured preview subprocess: $s", e)
@@ -414,7 +414,7 @@ class Camera(Thread):
         except gp.GPhoto2Error as gpe:
             self.logger.warning("Error no picture could be maked, reason GPhoto2Error: %s", gpe)
 
-            lastCapturedImage = noImageCapturedInfo
+            lastCapturedImage = noImageCapturedInfoWithPath
 
 
         except Exception as e:
@@ -423,7 +423,7 @@ class Camera(Thread):
             self.logger.debug("Image cant captured or saved: %s", e)
             os.remove(imageDirectory + lastCapturedImage)
 
-            lastCapturedImage = noImageCapturedInfo
+            lastCapturedImage = noImageCapturedInfoWithPath
 
         self._close_connection_to_camera()
 
@@ -765,7 +765,7 @@ def getButton():
 
 def saveImage():
     global lastCapturedImage
-    if(lastCapturedImage != noImageCapturedInfo):
+    if(lastCapturedImage != noImageCapturedInfoWithPath):
 
         try:
             if(saveOnServer):
@@ -781,7 +781,7 @@ def saveImage():
 def deleteImage():
     global lastCapturedImage
 
-    if(lastCapturedImage != noImageCapturedInfo):
+    if(lastCapturedImage != noImageCapturedInfoWithPath):
 
         try:
             os.remove(imageDirectory + lastCapturedImage)
