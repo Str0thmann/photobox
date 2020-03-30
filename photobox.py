@@ -214,6 +214,7 @@ class Camera(Thread):
         while True:
             self.logger.debug("wait for startPreviewEvent")
             self.startPreviewEvent.wait()
+            self.startPreviewEvent.clear()
 
             # preview
             self.logger.debug("execute _video_preview_process")
@@ -237,7 +238,6 @@ class Camera(Thread):
         self.logger.debug("set the startPreviewEvent and set preview_is_running to True-> it should start")
         self.preview_is_running = True
         self.startPreviewEvent.set()
-        self.startPreviewEvent.clear()
 
     def stop_video_preview(self):
         self.logger.debug("")
@@ -372,8 +372,8 @@ class Camera(Thread):
 
                 time.sleep(1/video_preview_fps)
 
-        self.logger.debug("wait 1 sec")
-        Event().wait(1)
+        #self.logger.debug("wait 1 sec")
+        #Event().wait(1)
 
         #self._close_connection_to_camera()
         self.logger.debug("video preview is stopped now")
@@ -424,6 +424,8 @@ class Camera(Thread):
             os.remove(imageDirectory + lastCapturedImage)
 
             lastCapturedImage = noImageCapturedInfo
+
+        self._close_connection_to_camera()
 
         # start preview Subprocess
         self._start_captured_preview_process()
