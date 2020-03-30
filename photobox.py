@@ -254,6 +254,7 @@ class Camera(Thread):
         self._stop_video_preview_process()
 
         self.startCapturingEvent.set()
+        Event().wait(0.01)
         self.startCapturingEvent.clear()
 
     def stop_all_previews(self):
@@ -688,7 +689,7 @@ class Countdown(Thread):
             self.countdownEvent.wait()
 
             if(threads["Camera"].is_preview_video_running()):
-                self.countdown(10, False)
+                self._countdown(10, False)
                 #threads["LedRingControl"].start_led_countdown_event(False)
 
     def start_countdown(self):
@@ -697,7 +698,7 @@ class Countdown(Thread):
         self.countdownEvent.clear()
 
     # local function
-    def countdown(self, time, wait_for_barrier=False):
+    def _countdown(self, time, wait_for_barrier=False):
         if wait_for_barrier:
             global sync_Countdown_Barrier
             self.logger.debug("Wait on a Barrier for the LED Thread to start the coutdown synchron")
