@@ -223,6 +223,7 @@ class Camera(Thread):
             if(self.startCapturing):
                 self.logger.debug("wait for startCapturingEvent")
                 self.startCapturingEvent.wait()
+                self.startCapturingEvent.clear()
 
                 self.logger.debug("start capturing")
                 self._capture()
@@ -256,7 +257,6 @@ class Camera(Thread):
         #Event().wait(1)
 
         self.startCapturingEvent.set()
-        self.startCapturingEvent.clear()
 
     def stop_all_previews(self):
         #global preview_is_running
