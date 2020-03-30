@@ -120,7 +120,7 @@ serverImageDirectory = "/home/pi/server/"
 diashowTime = 5
 
 # FPS, can vary because of the performance
-video_preview_fps = 40
+video_preview_fps = 20
 
 
 captureButton = Button(27)
