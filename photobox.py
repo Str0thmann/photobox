@@ -253,8 +253,9 @@ class Camera(Thread):
 
         self._stop_video_preview_process()
 
+        Event().wait(1)
+
         self.startCapturingEvent.set()
-        Event().wait(0.01)
         self.startCapturingEvent.clear()
 
     def stop_all_previews(self):
