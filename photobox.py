@@ -253,7 +253,7 @@ class Camera(Thread):
 
         self._stop_video_preview_process()
 
-        Event().wait(1)
+        #Event().wait(1)
 
         self.startCapturingEvent.set()
         self.startCapturingEvent.clear()
@@ -372,7 +372,10 @@ class Camera(Thread):
 
                 time.sleep(1/video_preview_fps)
 
-        self._close_connection_to_camera()
+        self.logger.debug("wait 1 sec")
+        Event().wait(1)
+
+        #self._close_connection_to_camera()
         self.logger.debug("video preview is stopped now")
 
     def _capture(self):
