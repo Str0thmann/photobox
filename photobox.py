@@ -288,7 +288,7 @@ class Camera(Thread):
 
             else:
                 self.logger.warning("Open noImageCapturedInfo Image in feh")
-                picturePreviewCommand = "feh -xFY " + lastCapturedImage
+                picturePreviewCommand = "feh -xFY " + imageDirectory + lastCapturedImage
                 self.capturedPreviewSubProcess = subprocess.Popen(picturePreviewCommand, shell=True, preexec_fn=os.setsid)
         except Exception as e:
             self.logger.warning("Error occurred, by the try to start the captured preview subprocess: $s", e)
@@ -373,7 +373,7 @@ class Camera(Thread):
                 time.sleep(1/video_preview_fps)
 
         self._close_connection_to_camera()
-        self.logger.debug("leve video preview1")
+        self.logger.debug("video preview is stopped now")
 
     def _capture(self):
         global captured
