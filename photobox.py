@@ -91,11 +91,20 @@ import gphoto2 as gp
 import logging
 import io
 import logging
+import configparser
+
 
 
 
 # setup Logging
 logging.basicConfig(filename=str(os.path.dirname(os.path.realpath(__file__))) + '/photobox.log', format='%(asctime)s %(levelname)s\tl:%(lineno)d %(threadName)s %(funcName)s: %(message)s', level=logging.DEBUG)
+
+# setup camera configuration parser
+camera_configuration_parsed = configparser.ConfigParser()
+camera_configuration_parsed.read("camera-config.ini")
+
+camera_configuration_mode = "default"
+
 
 
 # boolean for Develop Modus
@@ -369,10 +378,6 @@ class Camera(Thread):
 
                 time.sleep(1/video_preview_fps)
 
-        #self.logger.debug("wait 0.1 sec")
-        #Event().wait(0.1)
-
-        #self._close_connection_to_camera()
         self.logger.debug("video preview is stopped now")
 
     def _capture(self):
@@ -439,6 +444,19 @@ class Camera(Thread):
         except Exception as e:
             self.logger.warning("Unkown Error: trying to close the connection to the Camera: %s", e)
 
+    def _load_camera_configuration(self):
+        global camera_configuration_parsed
+        global camera_configuration_mode
+        for key in camera_configuration_parsed[camera_configuration_mode]:
+            try:
+                widget_child_name = gp.check_result(gp.gp_widget_get_child_by_name(self.camera_config, key))
+                gp.check_result(gp.gp_widget_set_value(widget_child_name, widget_child_name.get_choice(int(camera_configuration_parsed[camera_configuration_mode][key]))))
+                self.logger.debug(str(key) + "successful changed")
+
+            except gp.GPhoto2Error as gpe:
+                self.logger.warning("GP Error in load: " + str(gpe) + "\n by Key: " + str(key))
+            except Exception as e:
+                self.logger.warning("Unknown Error: " + str(e) + "\n by Key: " + str(key))
 
 class ScreenSaver(Thread):
     global threads
