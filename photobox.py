@@ -100,8 +100,9 @@ import configparser
 logging.basicConfig(filename=str(os.path.dirname(os.path.realpath(__file__))) + '/photobox.log', format='%(asctime)s %(levelname)s\tl:%(lineno)d %(threadName)s %(funcName)s: %(message)s', level=logging.DEBUG)
 
 # setup camera configuration parser
+camera_config_file = "camera-config.ini"
 camera_configuration_parsed = configparser.ConfigParser()
-camera_configuration_parsed.read("camera-config.ini")
+camera_configuration_parsed.read(camera_config_file)
 
 camera_configuration_mode = "default"
 
@@ -200,7 +201,7 @@ class Camera(Thread):
 
         self._camera = gp.Camera()
         self._context = gp.gp_context_new()
-
+        self._camera_config = self._camera.get_config(self._context)
 
         self.logger.debug("Want to open/initialize a connection to the Camera")
 
@@ -445,11 +446,15 @@ class Camera(Thread):
             self.logger.warning("Unkown Error: trying to close the connection to the Camera: %s", e)
 
     def _load_camera_configuration(self):
+        global camera_config_file
         global camera_configuration_parsed
         global camera_configuration_mode
+
+        camera_configuration_parsed.read(camera_config_file)
+
         for key in camera_configuration_parsed[camera_configuration_mode]:
             try:
-                widget_child_name = gp.check_result(gp.gp_widget_get_child_by_name(self.camera_config, key))
+                widget_child_name = gp.check_result(gp.gp_widget_get_child_by_name(self._camera_config, key))
                 gp.check_result(gp.gp_widget_set_value(widget_child_name, widget_child_name.get_choice(int(camera_configuration_parsed[camera_configuration_mode][key]))))
                 self.logger.debug(str(key) + "successful changed")
 
@@ -535,6 +540,9 @@ class ScreenSaver(Thread):
 
 class LedRingControl(Thread):
     global threads
+
+    logger = logging.getLogger("LedRingControl: ")
+
 
     ledCountdownEvent = Event()
 
@@ -713,8 +721,8 @@ class Countdown(Thread):
             self.countdownEvent.wait()
 
             if(threads["Camera"].is_preview_video_running()):
-                self._countdown(10, False)
-                #threads["LedRingControl"].start_led_countdown_event(False)
+                self._countdown(10, True)
+                threads["LedRingControl"].start_led_countdown_event(True)
 
     def start_countdown(self):
         self.countdownEvent.set()
