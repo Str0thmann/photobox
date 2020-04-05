@@ -109,9 +109,9 @@ camera_configuration_mode = 'default_1'
 logging.debug("hello")
 
 try:
-    var1 = camera_configuration_parsed['default']['shutterspeed']
+    var1 = camera_configuration_parsed[camera_configuration_mode]['shutterspeed']
     logging.debug("success %s", var1)
-except configparser.Error as e:
+except Exception as e:
     logging.debug(e)
 
 
