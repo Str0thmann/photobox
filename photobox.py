@@ -358,10 +358,10 @@ class Camera(Thread):
                         self.videoPreviewSubProcess.stdin.write("reload()".encode())
 
                 except gp.GPhoto2Error as gpe:
-                    self.logger.warning("Error no picture could be maked, reason GPhoto2Error: %s", gpe)
+                    self.logger.warning("Error no preview picture could be maked, reason GPhoto2Error: %s", gpe)
 
                 except Exception as e:
-                    self.logger.warning("Error no picture could be maked, reason unkown: %s", e)
+                    self.logger.warning("Error no preview picture could be maked, reason unkown: %s", e)
 
 
                 time.sleep(1/video_preview_fps)
@@ -462,6 +462,8 @@ class Camera(Thread):
            # gp.check_result(gp.gp_camera_init(self._camera, self._context))
 
             self._camera_config = gp.check_result(gp.gp_camera_get_config(self._camera, self._context))
+
+            self._close_connection_to_camera()
 
             self.logger.debug("Succefully open/initialize a connection to the Camera")
         except gp.GPhoto2Error as gpe:
