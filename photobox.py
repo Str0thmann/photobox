@@ -194,6 +194,8 @@ class Camera(Thread):
         subprocess.Popen('killall /usr/lib/gvfs/gvfs-gphoto2-volume-monitor', shell=True, stdout=False, stdin=False).wait()
         subprocess.Popen('killall /usr/lib/gvfs/gvfsd-gphoto2', shell=True, stdout=False, stdin=False).wait()
 
+        Event().wait(2)
+
 
         #self.contex = gp.gp_context_new()
         #self.error, self.camera = gp.gp_camera_new()
@@ -322,6 +324,8 @@ class Camera(Thread):
 
     def _video_preview_process(self):
         global video_preview_fps
+
+        self._load_camera_configuration()
 
         # Subprocess Preview Stream
         first = True
@@ -461,7 +465,9 @@ class Camera(Thread):
 
            # gp.check_result(gp.gp_camera_init(self._camera, self._context))
 
-            self._camera_config = gp.check_result(gp.gp_camera_get_config(self._camera, self._context))
+            #self._camera_config = gp.check_result(gp.gp_camera_get_config(self._camera, self._context))
+
+            self._camera_config = self._camera.get_config(self._context)
 
             self._close_connection_to_camera()
 
