@@ -66,11 +66,11 @@
 
     TODO exception picture screen saver between each picture change, if nothing is found print no picture
 
-    TODO please smile picture for the 2 seconds before taking the picture
-
     TODO LedControl
 
     TODO pngview check implement
+
+    TODO led, screensaver and countdown config file and loader
 '''
 
 from threading import Thread, Event, Barrier
@@ -565,6 +565,8 @@ class LedRingControl(Thread):
     def __init__(self):
         Thread.__init__(self)
         Thread.setName(self, "LedRingControl")
+        self.logger.info("name the Thread: LedRingControl")
+
 
 
     def run(self):
