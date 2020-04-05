@@ -604,8 +604,7 @@ class LedRingControl(Thread):
         pass
 
     def led_ring_function_countdown(self):
-        self.logger.info("start led ring countdown")
-
+        self.logger.info("enter")
 
         # TODO break condition
         #while(countdown > 0):
@@ -714,6 +713,8 @@ class LedRingControl(Thread):
             global sync_Countdown_Barrier
             self.logger.debug("Wait on a Barrier for the Countdown Thread to start the coutdown synchron")
             sync_Countdown_Barrier.wait()
+
+        self.logger.info("start led ring countdown")
 
         self.ledCountdownEvent.set()
 
