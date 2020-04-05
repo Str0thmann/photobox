@@ -104,17 +104,16 @@ camera_config_file = "camera-config.ini"
 camera_configuration_parsed = configparser.ConfigParser()
 camera_configuration_parsed.read(camera_config_file)
 
-camera_configuration_mode = "default"
+camera_configuration_mode = 'default'
 
 logging.debug("hello")
 
 try:
-    var1 = camera_configuration_parsed[camera_configuration_mode]["shutterspeed"]
+    var1 = camera_configuration_parsed[camera_configuration_mode]['shutterspeed']
     logging.debug("success %s", var1)
 except Exception as e:
-    logging.debug("Faield: %s", e)
+    logging.debug("Failed: %s", e)
 
-logging.debug(str(camera_configuration_parsed[camera_configuration_mode]["shutterspeed"]))
 
 
 
@@ -203,9 +202,6 @@ class Camera(Thread):
 
         subprocess.Popen('killall /usr/lib/gvfs/gvfs-gphoto2-volume-monitor', shell=True, stdout=False, stdin=False).wait()
         subprocess.Popen('killall /usr/lib/gvfs/gvfsd-gphoto2', shell=True, stdout=False, stdin=False).wait()
-
-        Event().wait(2)
-
 
         #self.contex = gp.gp_context_new()
         #self.error, self.camera = gp.gp_camera_new()
