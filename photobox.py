@@ -578,6 +578,8 @@ class LedRingControl(Thread):
         Thread.setName(self, "LedRingControl")
         self.logger.info("name the Thread: LedRingControl")
 
+        self.wait_for_barrier = False
+
 
 
     def run(self):
@@ -599,9 +601,9 @@ class LedRingControl(Thread):
     def reset_led_ring(self):
         pass
 
-    def led_ring_function_countdown(self, wait_for_barrier=False):
+    def led_ring_function_countdown(self, start_time):
 
-        if wait_for_barrier:
+        if self.wait_for_barrier:
             global sync_Countdown_Barrier
             self.logger.debug("Wait on a Barrier for the Countdown Thread to start the coutdown synchron")
             sync_Countdown_Barrier.wait()
@@ -609,7 +611,7 @@ class LedRingControl(Thread):
         # TODO break condition
         #while(countdown > 0):
             #self.increase_led_ring()
-        for i in range(10, 0, -1):
+        for i in range(start_time, 0, -1):
 
             if False and self.startindex != 6 and self.startindex != 12 and self.endindex != 18 and self.endindex != 24:
                 self.pixels[self.startindex] = (255, 255, 255)
@@ -708,7 +710,8 @@ class LedRingControl(Thread):
 
 
 
-    def start_led_countdown_event(self):
+    def start_led_countdown_event(self, wait_for_barrier=False):
+        self.wait_for_barrier = wait_for_barrier
         self.ledCountdownEvent.set()
 
     def stop_led_countdown_event(self):
