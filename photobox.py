@@ -441,7 +441,9 @@ class Camera(Thread):
         global camera_configuration_parsed
         global camera_configuration_mode
 
-        camera_configuration_parsed.read(camera_config_file)
+        self.logger.info("Enter")
+
+        camera_configuration_parsed.read(str(camera_config_file))
 
         for key in camera_configuration_parsed[camera_configuration_mode]:
             try:
