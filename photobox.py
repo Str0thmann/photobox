@@ -109,15 +109,6 @@ camera_configuration_parsed.read(camera_config_file)
 
 camera_configuration_mode = 'default'
 
-logging.debug("hello")
-
-try:
-    var1 = camera_configuration_parsed[camera_configuration_mode]['shutterspeed']
-    logging.debug("success %s", var1)
-except:
-    e = sys.exc_info()[0]
-    logging.debug(e)
-
 
 
 
