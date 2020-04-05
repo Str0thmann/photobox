@@ -111,7 +111,7 @@ logging.debug("hello")
 try:
     var1 = camera_configuration_parsed['default']['shutterspeed']
     logging.debug("success %s", var1)
-except Exception as e:
+except configparser.Error as e:
     logging.debug(e)
 
 
