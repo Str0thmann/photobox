@@ -477,6 +477,7 @@ class Camera(Thread):
             self.logger.debug("Succefully open/initialize a connection to the Camera")
         except gp.GPhoto2Error as gpe:
             self.logger.warning("GPhoto2Error Error: trying to open the connection to the Camera: %s", gpe)
+            self._close_connection_to_camera()
             Event().wait(2)
             self._initiate_camera()
         except Exception as e:
