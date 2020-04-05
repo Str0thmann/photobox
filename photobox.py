@@ -587,7 +587,9 @@ class LedRingControl(Thread):
         self.led_ring_function_rainbow_cycle(0.001)
 
         while True:
+            self.logger.debug("wait for ledCountdownEvent")
             self.ledCountdownEvent.wait()
+            self.ledCountdownEvent.clear()
 
             self.led_ring_function_countdown(10)
             #self.led_ring_function_rainbow_cycle(10)
@@ -601,17 +603,14 @@ class LedRingControl(Thread):
     def reset_led_ring(self):
         pass
 
-    def led_ring_function_countdown(self, start_time):
+    def led_ring_function_countdown(self):
+        self.logger.info("start led ring countdown")
 
-        if self.wait_for_barrier:
-            global sync_Countdown_Barrier
-            self.logger.debug("Wait on a Barrier for the Countdown Thread to start the coutdown synchron")
-            sync_Countdown_Barrier.wait()
 
         # TODO break condition
         #while(countdown > 0):
             #self.increase_led_ring()
-        for i in range(start_time, 0, -1):
+        for i in range(10, 0, -1):
 
             if False and self.startindex != 6 and self.startindex != 12 and self.endindex != 18 and self.endindex != 24:
                 self.pixels[self.startindex] = (255, 255, 255)
@@ -711,11 +710,13 @@ class LedRingControl(Thread):
 
 
     def start_led_countdown_event(self, wait_for_barrier=False):
-        self.wait_for_barrier = wait_for_barrier
+        if wait_for_barrier:
+            global sync_Countdown_Barrier
+            self.logger.debug("Wait on a Barrier for the Countdown Thread to start the coutdown synchron")
+            sync_Countdown_Barrier.wait()
+
         self.ledCountdownEvent.set()
 
-    def stop_led_countdown_event(self):
-        self.ledCountdownEvent.clear()
 
     def set_led_color(self, ledNumber, rgb):
         self.pixels[ledNumber] = (rgb[0], rgb[1], rgb[2])
@@ -759,6 +760,8 @@ class Countdown(Thread):
             global sync_Countdown_Barrier
             self.logger.debug("Wait on a Barrier for the LED Thread to start the coutdown synchron")
             sync_Countdown_Barrier.wait()
+
+        self.logger.info("start number png countdown")
 
         for i in range(time, 0, -1):
 
