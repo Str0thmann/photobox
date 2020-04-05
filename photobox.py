@@ -199,21 +199,8 @@ class Camera(Thread):
         #self.error, self.camera = gp.gp_camera_new()
         #self.error = gp.gp_camera_init(self.camera, self.contex)
 
-        self._camera = gp.Camera()
-        self._context = gp.gp_context_new()
-        self._camera_config = self._camera.get_config(self._context)
 
-        self.logger.debug("Want to open/initialize a connection to the Camera")
-
-        try:
-            gp.check_result(gp.gp_camera_init(self._camera, self._context))
-            self.logger.debug("Succefully open/initialize a connection to the Camera")
-        except gp.GPhoto2Error as gpe:
-            self.logger.warning("GPhoto2Error Error: trying to open the connection to the Camera: %s", gpe)
-        except Exception as e:
-            self.logger.warning("Unkown Error: trying to open the connection to the Camera: %s", e)
-
-
+        self._initiate_camera()
 
         self.logger.debug('Camera summary: %s', str(self._camera.get_summary(self._context)))
 
@@ -462,6 +449,27 @@ class Camera(Thread):
                 self.logger.warning("GP Error in load: " + str(gpe) + "\n by Key: " + str(key))
             except Exception as e:
                 self.logger.warning("Unknown Error: " + str(e) + "\n by Key: " + str(key))
+
+    def _initiate_camera(self):
+        self.logger.debug("Want to open/initialize a connection to the Camera")
+
+        try:
+            self._camera = gp.Camera()
+            self._context = gp.check_result(gp.gp_context_new())
+
+            #context_config = gp.check_result(gp.gp_camera_init(camera, context))
+
+            gp.check_result(gp.gp_camera_init(self._camera, self._context))
+
+            self._camera_config = gp.check_result(gp.gp_camera_get_config(self._camera, self._context))
+
+            self.logger.debug("Succefully open/initialize a connection to the Camera")
+        except gp.GPhoto2Error as gpe:
+            self.logger.warning("GPhoto2Error Error: trying to open the connection to the Camera: %s", gpe)
+            Event().wait(2)
+            self._initiate_camera()
+        except Exception as e:
+            self.logger.warning("Unkown Error: trying to open the connection to the Camera: %s", e)
 
 class ScreenSaver(Thread):
     global threads
