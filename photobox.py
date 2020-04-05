@@ -202,7 +202,7 @@ class Camera(Thread):
         #self.error, self.camera = gp.gp_camera_new()
         #self.error = gp.gp_camera_init(self.camera, self.contex)
 
-
+        Event().wait(0.5)
         self._initiate_camera()
 
         self.logger.debug('Camera summary: %s', str(self._camera.get_summary(self._context)))
