@@ -106,6 +106,8 @@ camera_configuration_parsed.read(camera_config_file)
 
 camera_configuration_mode = "default"
 
+logging.debug("hello")
+
 logging.debug(camera_configuration_parsed[camera_configuration_mode]["shutterspeed"])
 
 
