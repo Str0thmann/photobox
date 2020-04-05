@@ -106,6 +106,8 @@ camera_configuration_parsed.read(camera_config_file)
 
 camera_configuration_mode = "default"
 
+logging.debug(camera_configuration_parsed)
+
 
 
 # boolean for Develop Modus
@@ -445,10 +447,10 @@ class Camera(Thread):
 
         camera_configuration_parsed.read(str(camera_config_file))
 
-        for key in camera_configuration_parsed[camera_configuration_mode]:
+        for key in camera_configuration_parsed[str(camera_configuration_mode)]:
             try:
                 widget_child_name = gp.check_result(gp.gp_widget_get_child_by_name(self._camera_config, key))
-                gp.check_result(gp.gp_widget_set_value(widget_child_name, widget_child_name.get_choice(int(camera_configuration_parsed[camera_configuration_mode][key]))))
+                gp.check_result(gp.gp_widget_set_value(widget_child_name, widget_child_name.get_choice(int(camera_configuration_parsed[str(camera_configuration_mode)][key]))))
                 self.logger.debug(str(key) + "successful changed")
 
             except gp.GPhoto2Error as gpe:
