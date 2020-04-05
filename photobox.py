@@ -104,7 +104,7 @@ camera_config_file = "camera-config.ini"
 camera_configuration_parsed = configparser.ConfigParser()
 camera_configuration_parsed.read(camera_config_file)
 
-camera_configuration_mode = 'default'
+camera_configuration_mode = 'default_1'
 
 logging.debug("hello")
 
