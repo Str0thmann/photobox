@@ -100,11 +100,14 @@ import configparser
 logging.basicConfig(filename=str(os.path.dirname(os.path.realpath(__file__))) + '/photobox.log', format='%(asctime)s %(levelname)s\tl:%(lineno)d %(threadName)s %(funcName)s: %(message)s', level=logging.DEBUG)
 
 # setup camera configuration parser
-camera_config_file = "camera-config.ini"
+# use the absolute path
+camera_config_file_name = "camera-config.ini"
+camera_config_file = os.path.join(os.path.dirname(__file__), camera_config_file_name)
+
 camera_configuration_parsed = configparser.ConfigParser()
 camera_configuration_parsed.read(camera_config_file)
 
-camera_configuration_mode = 'default_1'
+camera_configuration_mode = 'default'
 
 logging.debug("hello")
 
