@@ -112,7 +112,7 @@ try:
     var1 = camera_configuration_parsed[camera_configuration_mode]['shutterspeed']
     logging.debug("success %s", var1)
 except Exception as e:
-    logging.debug("Failed: %s", e)
+    logging.debug(e)
 
 
 
