@@ -625,6 +625,7 @@ class LedRingControl(Thread):
             self.endindex -= 1
 
 
+        self.turn_off_all()
         # TODO wait for: capture finished
 
     def wheel(self, pos):
