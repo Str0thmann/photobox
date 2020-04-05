@@ -591,7 +591,7 @@ class LedRingControl(Thread):
             self.ledCountdownEvent.wait()
             self.ledCountdownEvent.clear()
 
-            self.led_ring_function_countdown(10)
+            self.led_ring_function_countdown()
             #self.led_ring_function_rainbow_cycle(10)
 
 
@@ -715,6 +715,7 @@ class LedRingControl(Thread):
     def start_led_countdown_event(self, wait_for_barrier=False):
 
         self.wait_for_barrier = wait_for_barrier
+        self.logger.debug("set wait_for_barrier: %s", self.wait_for_barrier)
 
         self.ledCountdownEvent.set()
 
@@ -753,8 +754,6 @@ class Countdown(Thread):
 
     def start_countdown(self):
         self.countdownEvent.set()
-        #time.sleep(0.3)
-        self.countdownEvent.clear()
 
     # local function
     def _countdown(self, start_timer, wait_for_barrier=False):
