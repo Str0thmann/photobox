@@ -455,7 +455,7 @@ class Camera(Thread):
 
         try:
             self._camera = gp.Camera()
-            self._context = gp.check_result(gp.gp_context_new())
+            self._context = gp.gp_context_new())
 
             self.context_config = gp.check_result(gp.gp_camera_init(self._camera, self._context))
 
