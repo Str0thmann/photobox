@@ -615,7 +615,7 @@ class LedRingControl(Thread):
             #self.increase_led_ring()
         for i in range(10, 0, -1):
 
-            if False and self.startindex != 6 and self.startindex != 12 and self.endindex != 18 and self.endindex != 24:
+            if self.startindex != 6 and self.startindex != 12 and self.endindex != 18 and self.endindex != 24:
                 self.pixels[self.startindex] = (255, 255, 255)
                 self.pixels[self.endindex] = (255, 255, 255)
 
