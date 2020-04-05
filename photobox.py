@@ -579,6 +579,8 @@ class LedRingControl(Thread):
         self.logger.info("name the Thread: LedRingControl")
 
         self.wait_for_barrier = False
+        self.start_timer = 10
+
 
 
 
@@ -604,22 +606,21 @@ class LedRingControl(Thread):
         pass
 
     def led_ring_function_countdown(self):
-        if self.wait_for_barrier:
-            global sync_Countdown_Barrier
-            self.logger.debug("Wait on a Barrier for the Countdown Thread to start the coutdown synchron")
-            sync_Countdown_Barrier.wait()
+
+        self._sync_with_countdown_thread()
 
         self.logger.info("start led ring countdown")
         # TODO break condition
         #while(countdown > 0):
             #self.increase_led_ring()
-        for i in range(10, 0, -1):
+        for i in range(self.start_timer, 0, -1):
 
             if self.startindex != 6 and self.startindex != 12 and self.endindex != 18 and self.endindex != 24:
                 self.pixels[self.startindex] = (255, 255, 255)
                 self.pixels[self.endindex] = (255, 255, 255)
 
-                Event().wait(1)
+                #Event().wait(1)
+                self._sync_with_countdown_thread()
 
             self.startindex += 1
             self.endindex -= 1
@@ -713,9 +714,10 @@ class LedRingControl(Thread):
 
 
 
-    def start_led_countdown_event(self, wait_for_barrier=False):
+    def start_led_countdown_event(self, start_timer, wait_for_barrier=False):
 
         self.wait_for_barrier = wait_for_barrier
+        self.start_timer = start_timer
         self.logger.debug("set wait_for_barrier: %s", self.wait_for_barrier)
 
         self.ledCountdownEvent.set()
@@ -733,6 +735,12 @@ class LedRingControl(Thread):
     def turn_off_all(self):
         self.pixels.fill((0, 0, 0))
 
+    def _sync_with_countdown_thread(self):
+        if self.wait_for_barrier:
+            global sync_Countdown_Barrier
+            self.logger.debug("Wait on a Barrier for the Countdown Thread to start the coutdown synchron")
+            sync_Countdown_Barrier.wait()
+
 
 class Countdown(Thread):
     global threads
@@ -744,24 +752,29 @@ class Countdown(Thread):
         Thread.setName(self, "Countdown")
 
 
+        self.wait_for_barrier = False
+        self.start_timer = 10
+
+
+
     def run(self):
         while True:
             self.countdownEvent.wait()
             self.countdownEvent.clear()
 
             if(threads["Camera"].is_preview_video_running()):
-                threads["LedRingControl"].start_led_countdown_event(True)
-                self._countdown(10, True)
+                threads["LedRingControl"].start_led_countdown_event(self.start_timer, True)
+                self._countdown(self.start_timer, True)
 
     def start_countdown(self):
         self.countdownEvent.set()
 
     # local function
     def _countdown(self, start_timer, wait_for_barrier=False):
-        if wait_for_barrier:
-            global sync_Countdown_Barrier
-            self.logger.debug("Wait on a Barrier for the LED Thread to start the coutdown synchron")
-            sync_Countdown_Barrier.wait()
+        self.wait_for_barrier = wait_for_barrier
+
+        self._sync_with_led_thread()
+
 
         self.logger.info("start number png countdown")
 
@@ -788,6 +801,15 @@ class Countdown(Thread):
             except Exception as e:
                 self.logger.debug("Error programm pngview or counter file not found: %s", e)
                 self.logger.debug("Error happend by i: %s", i)
+
+            self._sync_with_led_thread()
+
+
+    def _sync_with_led_thread(self):
+        if self.wait_for_barrier:
+            global sync_Countdown_Barrier
+            self.logger.debug("Wait on a Barrier for the LED Thread to start the coutdown synchron")
+            sync_Countdown_Barrier.wait()
 
 
 
