@@ -791,19 +791,27 @@ class Countdown(Thread):
                 if (i == 2):
                     # Der Boolean wird auf True gesetzt es wird auf das wait vom Preview stream Subprocess gewartet
                     threads["Camera"].start_capturing()
+                    try:
 
-                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 4 -t 2000 ' + path[0] + "/Files/smilePictures/pleaseSmile.png"
+                        counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 4 -t 2000 ' + path[0] + "/Files/smilePictures/pleaseSmile.png"
 
-                    subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE)
+                        subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE)
+                    except Exception as e:
+                        self.logger.critical("Error in: %s", counterCommand)
+                        self.logger.critical("Error unknown: %s", e)
 
                 if(devModus):
                     
                     self.logger.debug("Picture: " + str(i))
                     Event().wait(1)
                 else:
-                    counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 ' + path[0] + "/Files/counterPictures/counterWhite/" + str(i) + '.png'
+                    try:
+                        counterCommand = '/home/pi/raspidmx/pngview/pngview -b 0 -l 3 -t 1000 ' + path[0] + "/Files/counterPictures/counterWhite/" + str(i) + '.png'
 
-                    subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE).wait()
+                        subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE).wait()
+                    except Exception as e:
+                        self.logger.critical("Error in: %s", counterCommand)
+                        self.logger.critical("Error unknown: %s", e)
 
             except Exception as e:
                 self.logger.debug("Error program pngview or counter file not found: %s", e)
@@ -934,6 +942,8 @@ if __name__ == '__main__':
 
                 # Start countdown
                 countdownThread.start_countdown()
+
+                logging.debug("wait for capturedEvent")
                 capturedEvent.wait()
                 capturedEvent.clear()
 
@@ -953,6 +963,8 @@ if __name__ == '__main__':
 
                 # Start countdown
                 countdownThread.start_countdown()
+
+                logging.debug("wait for capturedEvent")
                 capturedEvent.wait()
                 capturedEvent.clear()
 
