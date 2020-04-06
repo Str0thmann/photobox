@@ -620,6 +620,9 @@ class LedRingControl(Thread):
                 self.pixels[self.endindex] = (255, 255, 255)
 
                 #Event().wait(1)
+
+            if i > 1:
+
                 self._sync_with_countdown_thread()
 
             self.startindex += 1
@@ -813,7 +816,8 @@ class Countdown(Thread):
                 self.logger.debug("Error program pngview or counter file not found: %s", e)
                 self.logger.debug("Error happened by i: %s", i)
 
-            self._sync_with_led_thread()
+            if i > 1:
+                self._sync_with_led_thread()
 
         self.logger.debug("Leave the function")
 
