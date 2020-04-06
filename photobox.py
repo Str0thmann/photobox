@@ -767,6 +767,7 @@ class Countdown(Thread):
                 self._countdown(self.start_timer, True)
 
     def start_countdown(self):
+        self.logger.debug("set countdownEvent -> it should start")
         self.countdownEvent.set()
 
     # local function
@@ -799,8 +800,8 @@ class Countdown(Thread):
                     subprocess.Popen(counterCommand, shell=True, stdout=False, stdin=subprocess.PIPE).wait()
 
             except Exception as e:
-                self.logger.debug("Error programm pngview or counter file not found: %s", e)
-                self.logger.debug("Error happend by i: %s", i)
+                self.logger.debug("Error program pngview or counter file not found: %s", e)
+                self.logger.debug("Error happened by i: %s", i)
 
             self._sync_with_led_thread()
 
@@ -808,7 +809,7 @@ class Countdown(Thread):
     def _sync_with_led_thread(self):
         if self.wait_for_barrier:
             global sync_Countdown_Barrier
-            self.logger.debug("Wait on a Barrier for the LED Thread to start the coutdown synchron")
+            self.logger.debug("Wait on a Barrier for the LED Thread to start the countdown synchron")
             sync_Countdown_Barrier.wait(timeout=2)
 
 
@@ -901,6 +902,7 @@ if __name__ == '__main__':
     while True:
         button = getButton()
         logging.info("Button: %s is pressed", button)
+        logging.debug("variable captured: %s", captured)
         #button = input("Please enter: ")
         screenSaverThread.update_last_interaction()
 
@@ -918,10 +920,12 @@ if __name__ == '__main__':
                 saveImage()
 
                 captured = False
+                logging.debug("set captured: %s", captured)
 
                 cameraThread.start_video_preview()
 
             else:
+
                 # Start countdown
                 countdownThread.start_countdown()
                 capturedEvent.wait()
@@ -936,6 +940,8 @@ if __name__ == '__main__':
                 saveImage()
 
                 captured = False
+                logging.debug("set captured: %s", captured)
+
 
                 cameraThread.start_video_preview()
 
