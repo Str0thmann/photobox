@@ -751,11 +751,8 @@ class Countdown(Thread):
         Thread.__init__(self)
         Thread.setName(self, "Countdown")
 
-
         self.wait_for_barrier = False
         self.start_timer = 10
-
-
 
     def run(self):
         while True:
@@ -781,7 +778,6 @@ class Countdown(Thread):
         self.wait_for_barrier = wait_for_barrier
 
         self._sync_with_led_thread()
-
 
         self.logger.info("start number png countdown")
 
@@ -819,6 +815,7 @@ class Countdown(Thread):
 
             self._sync_with_led_thread()
 
+        self.logger.debug("Leave the function")
 
     def _sync_with_led_thread(self):
         if self.wait_for_barrier:
