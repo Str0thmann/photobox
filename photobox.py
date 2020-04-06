@@ -759,16 +759,22 @@ class Countdown(Thread):
 
     def run(self):
         while True:
+            self.logger.debug("wait for countdownEvent")
             self.countdownEvent.wait()
             self.countdownEvent.clear()
 
             if(threads["Camera"].is_preview_video_running()):
+                self.logger.debug("want to start the whole countdown")
                 threads["LedRingControl"].start_led_countdown_event(self.start_timer, True)
                 self._countdown(self.start_timer, True)
 
+            else:
+                self.logger.debug("in else: is_preview_video_running, no it is not running")
+
     def start_countdown(self):
-        self.logger.debug("set countdownEvent -> it should start")
         self.countdownEvent.set()
+        self.logger.debug("set countdownEvent -> it should start, is countdownEvent set? :%s", self.countdownEvent.is_set())
+
 
     # local function
     def _countdown(self, start_timer, wait_for_barrier=False):
