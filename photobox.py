@@ -739,7 +739,7 @@ class LedRingControl(Thread):
         if self.wait_for_barrier:
             global sync_Countdown_Barrier
             self.logger.debug("Wait on a Barrier for the Countdown Thread to start the coutdown synchron")
-            sync_Countdown_Barrier.wait()
+            sync_Countdown_Barrier.wait(timeout=2)
 
 
 class Countdown(Thread):
@@ -809,7 +809,7 @@ class Countdown(Thread):
         if self.wait_for_barrier:
             global sync_Countdown_Barrier
             self.logger.debug("Wait on a Barrier for the LED Thread to start the coutdown synchron")
-            sync_Countdown_Barrier.wait()
+            sync_Countdown_Barrier.wait(timeout=2)
 
 
 
